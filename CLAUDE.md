@@ -31,8 +31,10 @@ Baca `SPEC.md` sebelum mulai. SPEC.md adalah sumber kebenaran; jika ada konflik 
 
 ## Perintah
 
-- `pnpm dev` — web + worker
-- `supabase start` / `supabase db reset` — DB lokal + migrasi + seed
+- `pnpm dev` — web + worker (Node 22.12+)
+- `supabase start` / `supabase db reset` — DB lokal + migrasi + seed (`pnpm db:start` / `pnpm db:reset`)
+- `pnpm db:test` — test pgTAP: tabel, seed, RLS, publikasi realtime
+- `pnpm db:seed:gen` — generate ulang `supabase/seed.sql` dari `agents.config.ts`
 - `pnpm test` — unit + integrasi (LLM di-mock)
 - `pnpm test:e2e` — Playwright
 - `pnpm test:live` — memanggil API asli (opsional, butuh API key)
@@ -43,7 +45,7 @@ Prototipe single-file (`reference/intelligo-ai-office.html`) adalah acuan perila
 
 ## Progres
 
-- [ ] Fase 0 — Fondasi
+- [x] Fase 0 — Fondasi (migrasi, seed, RLS diverifikasi di Postgres 16 + shim Supabase; `supabase start` belum diuji karena registry image diblokir di cloud env)
 - [ ] Fase 1 — Kantor visual
 - [ ] Fase 2 — Tugas dan agent runner
 - [ ] Fase 3 — Review Manager
