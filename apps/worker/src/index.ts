@@ -4,6 +4,7 @@ import { createDb, readSeedStatus } from './lib/db';
 import { createHealthState, startHealthServer } from './lib/health';
 import { loadWorkerEnv, redactDatabaseUrl } from './lib/env';
 import { createLogger } from './lib/log';
+import { createLlm } from './llm/factory';
 
 async function main(): Promise<void> {
   const log = createLogger();
@@ -21,7 +22,15 @@ async function main(): Promise<void> {
   const boss = createBoss(env.DATABASE_URL, log);
   await boss.start();
   const health = createHealthState();
-  const worker = await startWorker({ env, db, boss, log, rng: Math.random, health });
+  const worker = await startWorker({
+    env,
+    db,
+    boss,
+    log,
+    rng: Math.random,
+    health,
+    llm: createLlm(env),
+  });
   const healthServer = await startHealthServer(env.HEALTH_PORT, db, health);
   log.info(
     { dryRun: env.DRY_RUN, llmMode: env.LLM_MODE, healthPort: env.HEALTH_PORT },

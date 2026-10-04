@@ -1,0 +1,52 @@
+[
+  {
+    "id": "msg_fixture_1",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-sonnet-5-5",
+    "content": [
+      { "type": "thinking", "thinking": "", "signature": "sig_fixture_1" },
+      { "type": "text", "text": "Saya cek info batch 21 dulu." },
+      {
+        "type": "tool_use",
+        "id": "toolu_fixture_1",
+        "name": "search_knowledge",
+        "input": { "query": "bootcamp batch 21 harga" }
+      }
+    ],
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "usage": {
+      "input_tokens": 2100,
+      "output_tokens": 120,
+      "cache_read_input_tokens": 0,
+      "cache_creation_input_tokens": 1800
+    }
+  },
+  {
+    "id": "msg_fixture_2",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-sonnet-5-5",
+    "content": [
+      {
+        "type": "tool_use",
+        "id": "toolu_fixture_2",
+        "name": "submit_result",
+        "input": {
+          "summary": "Caption promo Batch 21 untuk Instagram.",
+          "content": "Bingung mulai belajar data dari mana?\n\nBootcamp Data Science Batch 21 mulai 3 November 2026. Investasi Rp 7.500.000, bisa dicicil.\n\nDaftar: [link-pendaftaran]",
+          "format": "markdown"
+        }
+      }
+    ],
+    "stop_reason": "tool_use",
+    "stop_sequence": null,
+    "usage": {
+      "input_tokens": 400,
+      "output_tokens": 260,
+      "cache_read_input_tokens": 1800,
+      "cache_creation_input_tokens": 0
+    }
+  }
+]
