@@ -1,7 +1,10 @@
 import type { Page } from '@playwright/test';
 import { E2eEnv } from './env';
 
-/** Signs in through the real magic link flow (token_hash from the admin API, as in the email). */
+/**
+ * Signs in through the real magic link flow (token_hash from the admin API). `type=email` as in
+ * the email template: it also confirms a user who signs in for the first time.
+ */
 export async function loginAs(page: Page, email: string): Promise<void> {
   const response = await fetch(`${E2eEnv.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/admin/generate_link`, {
     method: 'POST',
@@ -20,7 +23,7 @@ export async function loginAs(page: Page, email: string): Promise<void> {
   };
   const token = body.hashed_token ?? body.properties?.hashed_token;
   if (!token) throw new Error('hashed_token tidak ada di respons generate_link');
-  await page.goto(`/auth/confirm?token_hash=${token}&type=magiclink`, {
+  await page.goto(`/auth/confirm?token_hash=${token}&type=email`, {
     waitUntil: 'domcontentloaded',
   });
   await page.waitForURL((url) => url.pathname === '/', { waitUntil: 'domcontentloaded' });
