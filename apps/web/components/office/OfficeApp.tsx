@@ -2,6 +2,7 @@
 
 import type { MemberRole } from '@intelligo/shared';
 import { useCallback, useMemo, useState } from 'react';
+import { ChatPanel } from '@/components/panel/ChatPanel';
 import { OpsPanel, type PanelTab } from '@/components/panel/OpsPanel';
 import { useOfficeRealtime } from '@/lib/office/realtime';
 import { OfficeStore, useOfficeSnapshot } from '@/lib/office/store';
@@ -22,10 +23,12 @@ export function OfficeApp({ initial, viewer }: Props) {
   const [labelsVisible, setLabelsVisible] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
   const [tab, setTab] = useState<PanelTab>('team');
-  const select = useCallback(
-    (id: string) => setSelectedId((current) => (current === id ? null : id)),
-    [],
-  );
+  const select = useCallback((id: string) => {
+    // Clicking a character or a team row opens the chat with that agent.
+    setSelectedId(id);
+    setTab('chat');
+  }, []);
+  const selectedAgent = snapshot.agents.find((a) => a.id === selectedId);
 
   return (
     <div className="grid min-h-full grid-rows-[auto_1fr] gap-3 px-4 py-3 lg:h-full">
@@ -74,6 +77,11 @@ export function OfficeApp({ initial, viewer }: Props) {
             onTab={setTab}
             onSelect={select}
             onError={setNotice}
+            chat={
+              selectedAgent ? (
+                <ChatPanel key={selectedAgent.id} agent={selectedAgent} role={viewer.role} />
+              ) : undefined
+            }
           />
         </aside>
       </main>
