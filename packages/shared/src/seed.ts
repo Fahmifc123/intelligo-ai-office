@@ -5,11 +5,24 @@ import type { AgentConfig } from './schemas';
 /** SPEC section 14: default monthly budget per agent is 2 million input tokens. */
 export const DEFAULT_MONTHLY_TOKEN_BUDGET = 2_000_000;
 
+export interface SeedMember {
+  email: string;
+  role: 'owner' | 'staff' | 'viewer';
+}
+
+/** Local development accounts (magic link mail lands in the local Mailpit inbox). */
+export const DEV_MEMBERS: readonly SeedMember[] = [
+  { email: 'owner@intelligo.test', role: 'owner' },
+  { email: 'staff@intelligo.test', role: 'staff' },
+  { email: 'viewer@intelligo.test', role: 'viewer' },
+];
+
 export interface SeedOptions {
   orgId: string;
   modelWork: string;
   monthlyTokenBudget?: number;
   agents?: readonly AgentConfig[];
+  members?: readonly SeedMember[];
 }
 
 const sqlString = (value: string): string => `'${value.replaceAll("'", "''")}'`;
@@ -47,6 +60,11 @@ export function generateSeedSql(options: SeedOptions): string {
     .map((row) => `  (\n    ${row}\n  )`)
     .join(',\n');
 
+  const members = options.members ?? DEV_MEMBERS;
+  const memberValues = members
+    .map((m) => `  (${org}, ${sqlString(m.email.toLowerCase())}, ${sqlString(m.role)})`)
+    .join(',\n');
+
   const stateValues = agents
     .map(
       (agent) =>
@@ -81,5 +99,14 @@ insert into public.agent_states (agent_id, org_id, activity, status_text, curren
 values
 ${stateValues}
 on conflict (agent_id) do nothing;
-`;
+${
+  members.length > 0
+    ? `
+insert into public.org_members (org_id, email, role)
+values
+${memberValues}
+on conflict (email) do nothing;
+`
+    : ''
+}`;
 }

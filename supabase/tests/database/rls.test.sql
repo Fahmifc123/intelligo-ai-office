@@ -1,12 +1,12 @@
 -- Run with `pnpm db:test` (supabase test db). Verifies schema, seed, and RLS.
 begin;
-select plan(24);
+select plan(28);
 
 -- Tables from SPEC section 7 (+ settings)
 select has_table('public', t, 'table ' || t || ' exists')
 from unnest(array[
   'agents', 'agent_states', 'tasks', 'task_events', 'reviews', 'actions',
-  'chat_messages', 'llm_usage', 'knowledge_docs', 'settings'
+  'chat_messages', 'llm_usage', 'knowledge_docs', 'settings', 'org_members'
 ]) as t;
 
 -- RLS enabled on every public table
@@ -34,8 +34,28 @@ select is(
 select is(
   (select array_agg(tablename::text order by tablename) from pg_publication_tables
    where pubname = 'supabase_realtime' and schemaname = 'public'),
-  array['actions', 'agent_states', 'task_events', 'tasks'],
-  'realtime publishes agent_states, tasks, task_events, actions'
+  array['actions', 'agent_states', 'llm_usage', 'reviews', 'settings', 'task_events', 'tasks'],
+  'realtime publishes the tables the UI subscribes to'
+);
+
+-- Member claims: a new auth user on the allowlist gets org_id and role in app_metadata
+insert into auth.users (id, email, raw_app_meta_data)
+values ('dddddddd-0000-4000-8000-000000000001', 'Staff@Intelligo.test', '{"provider":"email"}');
+select is(
+  (select raw_app_meta_data ->> 'org_id' from auth.users where id = 'dddddddd-0000-4000-8000-000000000001'),
+  '00000000-0000-0000-0000-000000000001',
+  'allowlisted user gets org_id claim'
+);
+select is(
+  (select user_id::text from public.org_members where email = 'staff@intelligo.test'),
+  'dddddddd-0000-4000-8000-000000000001',
+  'member row is linked to the auth user'
+);
+update public.org_members set role = 'viewer' where email = 'staff@intelligo.test';
+select is(
+  (select raw_app_meta_data ->> 'role' from auth.users where id = 'dddddddd-0000-4000-8000-000000000001'),
+  'viewer',
+  'role change refreshes the claim'
 );
 
 -- Fixture rows for RLS checks (as postgres, bypassing RLS)

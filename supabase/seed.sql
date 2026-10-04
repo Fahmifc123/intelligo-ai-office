@@ -431,3 +431,10 @@ values
   ('scheduler', '00000000-0000-0000-0000-000000000001'::uuid, 'working', 'Atur jadwal trainer', null, 'desk'),
   ('success', '00000000-0000-0000-0000-000000000001'::uuid, 'working', 'Survei kepuasan alumni', null, 'desk')
 on conflict (agent_id) do nothing;
+
+insert into public.org_members (org_id, email, role)
+values
+  ('00000000-0000-0000-0000-000000000001'::uuid, 'owner@intelligo.test', 'owner'),
+  ('00000000-0000-0000-0000-000000000001'::uuid, 'staff@intelligo.test', 'staff'),
+  ('00000000-0000-0000-0000-000000000001'::uuid, 'viewer@intelligo.test', 'viewer')
+on conflict (email) do nothing;
