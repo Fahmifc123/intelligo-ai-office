@@ -25,12 +25,20 @@
       "dependsOn": ["^typecheck"]
     },
     "lint": {},
-    "test": {},
+    "test": {
+      "passThroughEnv": ["TEST_DATABASE_URL"]
+    },
     "test:e2e": {
       "cache": false
     },
     "test:live": {
-      "cache": false
+      "cache": false,
+      "passThroughEnv": [
+        "ANTHROPIC_API_KEY",
+        "TEST_DATABASE_URL",
+        "EFFORT_WORK",
+        "LLM_REFUSAL_FALLBACK"
+      ]
     }
   }
 }

@@ -9,7 +9,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint .",
     "test": "vitest run",
-    "mock:n8n": "tsx --env-file-if-exists=../../.env scripts/mock-n8n.ts"
+    "mock:n8n": "tsx --env-file-if-exists=../../.env scripts/mock-n8n.ts",
+    "test:live": "vitest run --config vitest.live.config.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
