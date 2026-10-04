@@ -1,6 +1,6 @@
 -- Run with `pnpm db:test` (supabase test db). Verifies schema, seed, and RLS.
 begin;
-select plan(28);
+select plan(32);
 
 -- Tables from SPEC section 7 (+ settings)
 select has_table('public', t, 'table ' || t || ' exists')
@@ -93,6 +93,31 @@ select is(
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"bbbbbbbb-0000-4000-8000-000000000002","role":"authenticated","app_metadata":{"org_id":"cccccccc-0000-4000-8000-000000000009"}}';
 select is((select count(*)::int from public.agents), 0, 'other org cannot read agents');
+reset role;
+
+-- cost views keep the RLS of llm_usage (security_invoker)
+insert into public.llm_usage (org_id, agent_id, task_id, purpose, model, input_tokens, output_tokens, cost_usd)
+values
+  ('00000000-0000-0000-0000-000000000001', 'writer', 'aaaaaaaa-0000-4000-8000-000000000001',
+   'run', 'test-model', 1000, 100, 0.5),
+  ('cccccccc-0000-4000-8000-000000000009', null, null, 'chat', 'test-model', 9000, 900, 7);
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated","app_metadata":{"org_id":"00000000-0000-0000-0000-000000000001"}}';
+select is((select sum(cost_usd)::numeric from public.usage_by_day), 0.5::numeric, 'usage_by_day only sums own org');
+select is(
+  (select input_tokens::int from public.usage_by_agent_month where agent_id = 'writer'),
+  1000,
+  'usage_by_agent_month counts own org tokens'
+);
+select is((select count(*)::int from public.usage_by_task), 1, 'usage_by_task only lists own org tasks');
+reset role;
+set local role anon;
+select throws_ok(
+  'select count(*) from public.usage_by_day',
+  '42501',
+  null,
+  'anon cannot read cost views'
+);
 reset role;
 
 select * from finish();
