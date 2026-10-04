@@ -11,6 +11,7 @@ import { loadAgent, loadManager, monthlyInputTokens } from '../state/agents';
 import { logEvent } from '../state/events';
 import { transitionTask } from '../state/tasks';
 import type { JobDeps } from './deps';
+import { claimResume, parseRunnerState, resumeParentIfReady, subtaskSummaries } from './delegation';
 import { enqueueReview } from './enqueue';
 import { afterTaskSettled } from './settle';
 
@@ -38,8 +39,12 @@ async function latestRevision(q: Queryable, task: TaskRow): Promise<RevisionCont
   };
 }
 
+class ResumeStateError extends Error {}
+
 function describeError(error: unknown, timeoutMs: number): string {
   if (error instanceof LlmConfigError) return error.message;
+  if (error instanceof ResumeStateError)
+    return 'Percakapan Manager yang tersimpan tidak bisa dilanjutkan.';
   if (error instanceof Anthropic.APIUserAbortError)
     return `Melebihi batas waktu ${Math.round(timeoutMs / 60000)} menit per tugas.`;
   if (error instanceof Anthropic.RateLimitError)
@@ -73,9 +78,11 @@ async function releaseAgent(
  */
 export async function handleRunTask(deps: JobDeps, job: RunTaskJob): Promise<void> {
   const { db, env, log } = deps;
-  const task = await transitionTask(db, job.taskId, ['queued', 'needs_revision'], 'in_progress', {
-    started: true,
-  });
+  const task = job.resume
+    ? await claimResume(db, job.taskId)
+    : await transitionTask(db, job.taskId, ['queued', 'needs_revision'], 'in_progress', {
+        started: true,
+      });
   if (!task) return;
   const agentId = task.assignee_id ?? job.agentId;
   const agent = await loadAgent(db, agentId);
@@ -118,15 +125,23 @@ export async function handleRunTask(deps: JobDeps, job: RunTaskJob): Promise<voi
     statusText: `Mengerjakan: ${task.title}`,
     currentTaskId: task.id,
     targetSpot: 'desk',
-    event: { taskId: task.id, type: 'started', payload: { revision: task.revision_count } },
+    event: {
+      taskId: task.id,
+      type: 'started',
+      payload: { revision: task.revision_count, resumed: job.resume === true },
+    },
   });
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), env.TASK_TIMEOUT_MS);
   let outcome: RunOutcome;
   try {
+    const resume = job.resume ? parseRunnerState(task.result_json) : undefined;
+    if (job.resume && !resume) throw new ResumeStateError();
     outcome = await runAgentLoop(deps, task, agent, {
-      revision: await latestRevision(db, task),
+      revision: resume ? undefined : await latestRevision(db, task),
+      resume,
+      subtasks: resume ? await subtaskSummaries(db, task.id) : undefined,
       signal: controller.signal,
     });
   } catch (error) {
@@ -147,6 +162,33 @@ export async function handleRunTask(deps: JobDeps, job: RunTaskJob): Promise<voi
     await fail(outcome.error);
     return;
   }
+  if (outcome.kind === 'suspended') {
+    const { waitingOn, state } = outcome;
+    await db.tx(async (q) => {
+      await q.query(
+        `update public.tasks set result_json = coalesce(result_json, '{}'::jsonb)
+           || jsonb_build_object('runner_state', $2::jsonb, 'waiting_on', $3::jsonb)
+          where id = $1 and status = 'in_progress'`,
+        [task.id, JSON.stringify(state), JSON.stringify(waitingOn)],
+      );
+      const names = await q.query<{ name: string }>(
+        `select a.name from public.tasks t join public.agents a on a.id = t.assignee_id where t.id = any($1::uuid[])`,
+        [waitingOn],
+      );
+      const who = names.rows.map((r) => r.name).join(', ');
+      await logEvent(q, {
+        orgId: task.org_id,
+        taskId: task.id,
+        agentId: agent.id,
+        type: 'note',
+        payload: { message: `Menunggu hasil subtugas dari ${who}`, waiting_on: waitingOn },
+      });
+      await releaseAgent(q, task, agent, `Menunggu hasil ${who}`);
+    });
+    // A subtask may already have finished while the run was suspending.
+    await resumeParentIfReady(deps, task.id);
+    return;
+  }
 
   const proposed = await countProposedActions(db, task.id);
   const next = nextAfterRun(agent.is_manager, proposed > 0);
@@ -158,6 +200,10 @@ export async function handleRunTask(deps: JobDeps, job: RunTaskJob): Promise<voi
       finished: next === 'done',
     });
     if (!updated) return undefined;
+    await q.query(
+      `update public.tasks set result_json = result_json - 'runner_state' where id = $1`,
+      [task.id],
+    );
     await logEvent(q, {
       orgId: task.org_id,
       taskId: task.id,

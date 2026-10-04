@@ -201,3 +201,20 @@ export function buildReviewPrompt(input: ReviewInput): string {
     'Balas JSON: {"verdict": "approved" | "revise", "notes": "<maks 40 kata, sebut yang harus diperbaiki>", "scores": {"accuracy": 1-5, "tone": 1-5, "completeness": 1-5}}',
   ].join('\n');
 }
+
+/** Message appended when a manager's run resumes after its delegated subtasks finished. */
+export function buildSubtaskUpdate(subtasks: readonly SubtaskSummary[]): string {
+  const parts = ['Subtugas yang kamu delegasikan sudah selesai. Hasilnya:'];
+  for (const sub of subtasks) {
+    parts.push(
+      `<subtask agent="${sub.agentName}" status="${sub.status}" title="${sub.title}">`,
+      sub.result,
+      '</subtask>',
+    );
+  }
+  parts.push(
+    '',
+    'Lanjutkan tugas utama. Delegasikan langkah berikutnya bila perlu, atau serahkan hasil akhir dengan submit_result.',
+  );
+  return parts.join('\n');
+}

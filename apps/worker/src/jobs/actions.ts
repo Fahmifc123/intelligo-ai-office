@@ -12,6 +12,7 @@ import { callN8n, N8nConfigError } from '../lib/n8n';
 import { QUEUES, type ActionJob } from '../queues';
 import { logEvent } from '../state/events';
 import { loadTask, transitionTask } from '../state/tasks';
+import { onSubtaskSettled } from './delegation';
 import type { JobDeps } from './deps';
 
 const ACTION_COLUMNS = `id, org_id, task_id, agent_id, kind, payload, status, approved_by, approved_at, executed_at,
@@ -103,6 +104,7 @@ export async function resolveTaskActions(deps: JobDeps, taskId: string): Promise
         payload: { error: failed.error },
       });
     }
+    await onSubtaskSettled(deps, taskId);
     return;
   }
   const done = await transitionTask(deps.db, taskId, from, 'done', { finished: true });
@@ -115,6 +117,7 @@ export async function resolveTaskActions(deps: JobDeps, taskId: string): Promise
       payload: { status: 'done' },
     });
   }
+  await onSubtaskSettled(deps, taskId);
 }
 
 /**

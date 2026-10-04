@@ -12,7 +12,12 @@ export const QUEUES = {
 export const TaskJob = z.object({ taskId: z.guid() });
 export type TaskJob = z.infer<typeof TaskJob>;
 
-export const RunTaskJob = z.object({ taskId: z.guid(), agentId: z.string() });
+/** resume: continue a manager run that was waiting for delegated subtasks. */
+export const RunTaskJob = z.object({
+  taskId: z.guid(),
+  agentId: z.string(),
+  resume: z.boolean().optional(),
+});
 export type RunTaskJob = z.infer<typeof RunTaskJob>;
 
 export const ActionJob = z.object({ actionId: z.guid() });

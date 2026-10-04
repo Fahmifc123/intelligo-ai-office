@@ -241,9 +241,54 @@ export class ScriptedLlm implements LlmClient {
         message: this.whatsappReply(toolResults),
       });
     }
+    const lower = instructions.toLowerCase();
+    const allText = request.messages.map(textOf).join('\n');
+
+    // Manager: delegate lead scoring, then the proposal, then report (Fase 6).
+    if (available.has('delegate_task') && /lead|penawaran/.test(lower)) {
+      const delegated = called.filter((c) => c.name === 'delegate_task').length;
+      if (delegated === 0) {
+        return toolUse('delegate_task', {
+          agent_id: 'leads',
+          title: 'Skor leads minggu ini',
+          instructions:
+            'Nilai semua leads di sheet leads dengan score_leads. Sebutkan perusahaan dengan kategori panas beserta kebutuhannya.',
+        });
+      }
+      if (delegated === 1) {
+        const hot = (allText.match(/\| ([^|\n]+) \| \d+ \| panas \|/g) ?? [])
+          .map((row) => row.split('|')[1]?.trim())
+          .filter(Boolean);
+        return toolUse('delegate_task', {
+          agent_id: 'proposal',
+          title: 'Proposal penawaran untuk lead panas',
+          instructions: `Buat proposal penawaran corporate training di Google Doc untuk lead panas: ${hot.join(', ') || '[lead panas]'}.`,
+        });
+      }
+    }
+    if (available.has('score_leads') && !has('score_leads') && lower.includes('lead')) {
+      return toolUse('score_leads', { sheet: 'leads', only: 'semua' });
+    }
+    if (
+      available.has('create_google_doc') &&
+      !has('create_google_doc') &&
+      /proposal|penawaran|google doc/.test(lower)
+    ) {
+      return toolUse('create_google_doc', {
+        title: title || 'Proposal penawaran',
+        markdown: `# ${title}\n\n${instructions}\n\n## Investasi\n\nHarga ditentukan per penawaran: [harga].`,
+      });
+    }
+
+    const docUrl = allText.match(/https:\/\/docs\.google\.com\/document\/d\/[\w-]+\/edit/)?.[0];
+    const leadsTableText = toolResults.match(/"table":"((?:[^"\\]|\\.)*)"/)?.[1];
     const content = phone
       ? this.whatsappReply(toolResults)
-      : this.compose(title, instructions, toolResults, revisionNotes);
+      : docUrl
+        ? `Penawaran untuk lead panas sudah disiapkan.\n\nGoogle Doc: ${docUrl}`
+        : leadsTableText
+          ? (JSON.parse(`"${leadsTableText}"`) as string)
+          : this.compose(title, instructions, toolResults, revisionNotes);
     if (hooks?.onToolInput) {
       const chunks = 8;
       for (let i = 1; i <= chunks; i++) {

@@ -4,9 +4,11 @@ import type { z } from 'zod';
 import { Dispatcher, type DispatchNotification } from './dispatcher';
 import type { JobDeps } from './jobs/deps';
 import { handleActionDecision, handleExecuteAction, sweepActions } from './jobs/actions';
+import { sweepWaitingParents } from './jobs/delegation';
 import {
   dispatchTask,
   recordCancellation,
+  failOrphanedJobs,
   recoverInterruptedWork,
   sweepTasks,
 } from './jobs/dispatch';
@@ -22,6 +24,12 @@ import type { OfficeModeName, Rng } from './office/plan';
 import { ActionJob, ensureQueues, QUEUES, RunTaskJob, TaskJob } from './queues';
 
 export const IDLE_TICK_MS = 20_000;
+
+/**
+ * Task jobs must start within a second (the office reacts live). NOTIFY wake-ups are an
+ * optimization; polling every second is the guarantee.
+ */
+const POLLING = { pollingIntervalSeconds: 1, notifyPollingIntervalSeconds: 1 } as const;
 
 export interface WorkerDeps {
   env: WorkerEnv;
@@ -56,6 +64,12 @@ export async function startWorker(deps: WorkerDeps): Promise<RunningWorker> {
   };
   await ensureQueues(boss);
 
+  // Before taking new jobs: clear what a previous (crashed) worker left behind.
+  const orphaned = await failOrphanedJobs(jobDeps, Object.values(QUEUES));
+  if (orphaned > 0) log.info({ orphaned }, 'job yatim dari worker sebelumnya ditandai gagal');
+  const recovered = await recoverInterruptedWork(jobDeps, orgId);
+  if (recovered > 0) log.info({ recovered }, 'tugas yang terputus diantrekan ulang');
+
   /** Wraps a handler: validates job data, tracks consecutive failures for the health check. */
   const work = <T>(
     name: string,
@@ -63,29 +77,33 @@ export async function startWorker(deps: WorkerDeps): Promise<RunningWorker> {
     handler: (data: T) => Promise<void>,
     localConcurrency: number,
   ) =>
-    boss.work(name, { localConcurrency, batchSize: 1 }, async (jobs: Job<unknown>[]) => {
-      for (const job of jobs) {
-        try {
-          await handler(schema.parse(job.data));
-          health.consecutiveFailures.set(name, 0);
-          health.lastJobAt = new Date();
-        } catch (error) {
-          const failures = (health.consecutiveFailures.get(name) ?? 0) + 1;
-          health.consecutiveFailures.set(name, failures);
-          const level = failures > 3 ? 'error' : 'warn';
-          log[level](
-            {
-              job: name,
-              jobId: job.id,
-              failures,
-              err: error instanceof Error ? error.message : String(error),
-            },
-            'job gagal',
-          );
-          throw error;
+    boss.work(
+      name,
+      { localConcurrency, batchSize: 1, ...POLLING },
+      async (jobs: Job<unknown>[]) => {
+        for (const job of jobs) {
+          try {
+            await handler(schema.parse(job.data));
+            health.consecutiveFailures.set(name, 0);
+            health.lastJobAt = new Date();
+          } catch (error) {
+            const failures = (health.consecutiveFailures.get(name) ?? 0) + 1;
+            health.consecutiveFailures.set(name, failures);
+            const level = failures > 3 ? 'error' : 'warn';
+            log[level](
+              {
+                job: name,
+                jobId: job.id,
+                failures,
+                err: error instanceof Error ? error.message : String(error),
+              },
+              'job gagal',
+            );
+            throw error;
+          }
         }
-      }
-    });
+      },
+    );
 
   await work(QUEUES.routeTask, TaskJob, (data) => handleRouteTask(jobDeps, data), 4);
   await work(QUEUES.runTask, RunTaskJob, (data) => handleRunTask(jobDeps, data), 12);
@@ -118,9 +136,6 @@ export async function startWorker(deps: WorkerDeps): Promise<RunningWorker> {
     log.debug({ changed }, 'idle-tick');
   });
 
-  const recovered = await recoverInterruptedWork(jobDeps, orgId);
-  if (recovered > 0) log.info({ recovered }, 'tugas yang terputus diantrekan ulang');
-
   const dispatcher = new Dispatcher(db, log, {
     onNotification: async (notification: DispatchNotification) => {
       switch (notification.kind) {
@@ -142,6 +157,7 @@ export async function startWorker(deps: WorkerDeps): Promise<RunningWorker> {
       await syncOfficeMode();
       await sweepTasks(jobDeps);
       await sweepActions(jobDeps);
+      await sweepWaitingParents(jobDeps);
     },
   });
   await dispatcher.start();

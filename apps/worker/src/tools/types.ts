@@ -20,6 +20,8 @@ export interface ToolOutput {
   isError?: boolean;
   /** Wraps content in <external_data> so the model treats it as data (SPEC 14). */
   external?: boolean;
+  /** Subtask created by delegate_task: the run pauses until it finishes (Fase 6). */
+  suspendFor?: string;
 }
 
 /**

@@ -7,10 +7,11 @@ export async function enqueueRun(
   boss: PgBoss,
   task: Pick<TaskRow, 'id' | 'priority'>,
   agentId: string,
+  resume = false,
 ): Promise<void> {
   await boss.send(
     QUEUES.runTask,
-    { taskId: task.id, agentId },
+    resume ? { taskId: task.id, agentId, resume: true } : { taskId: task.id, agentId },
     { singletonKey: agentId, priority: bossPriority(task.priority) },
   );
 }

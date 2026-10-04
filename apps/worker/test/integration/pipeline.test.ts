@@ -7,6 +7,7 @@ import { loadTask } from '../../src/state/tasks';
 import { createTestDatabase, sequenceRng, TEST_ORG_ID, type TestDatabase } from '../helpers/db';
 import { hasTestDatabase } from '../helpers/env';
 import { startBoss, testEnv } from '../helpers/worker';
+import { startMockN8nServer, type MockN8nServer } from '../../scripts/mock-n8n-server';
 
 const waitFor = async (check: () => Promise<boolean>, timeoutMs = 30_000): Promise<void> => {
   const start = Date.now();
@@ -24,12 +25,19 @@ describe.skipIf(!hasTestDatabase)('full pipeline (pg-boss + dispatcher + scripte
   let activeWalks = 0;
   let maxConcurrentWalks = 0;
 
+  let n8n: MockN8nServer;
+
   beforeAll(async () => {
+    n8n = await startMockN8nServer('rahasia-pipeline');
     t = await createTestDatabase();
     const boss = await startBoss(t.url);
     stopBoss = () => boss.stop({ graceful: false, close: true });
     worker = await startWorker({
-      env: testEnv(t.url, { LLM_MODE: 'scripted' }),
+      env: testEnv(t.url, {
+        LLM_MODE: 'scripted',
+        N8N_BASE_URL: n8n.url,
+        N8N_WEBHOOK_SECRET: 'rahasia-pipeline',
+      }),
       db: t.db,
       boss,
       log: createTestLogger(),
@@ -48,6 +56,7 @@ describe.skipIf(!hasTestDatabase)('full pipeline (pg-boss + dispatcher + scripte
   afterAll(async () => {
     await worker?.stop();
     await stopBoss?.();
+    await n8n?.close();
     await t?.drop();
   });
 
@@ -98,4 +107,43 @@ describe.skipIf(!hasTestDatabase)('full pipeline (pg-boss + dispatcher + scripte
     }, 45_000);
     expect(maxConcurrentWalks).toBe(1);
   });
+
+  it('Fase 6: manager delegates lead scoring to Bima, then the proposal to Nadia, and reports the Doc link', async () => {
+    const id = await insert('Siapkan penawaran untuk lead panas minggu ini', 'manager');
+    await waitFor(async () => (await loadTask(t.db, id))?.status === 'done', 60_000);
+
+    const subtasks = await t.db.query<{ assignee_id: string; status: string; result_text: string }>(
+      `select assignee_id, status, result_text from public.tasks where parent_task_id = $1 order by created_at`,
+      [id],
+    );
+    expect(subtasks.rows.map((r) => [r.assignee_id, r.status])).toEqual([
+      ['leads', 'done'],
+      ['proposal', 'done'],
+    ]);
+    expect(subtasks.rows[0]?.result_text).toContain('| PT Logistik Cepat |');
+    expect(subtasks.rows[0]?.result_text).toContain('panas');
+
+    const parent = await loadTask(t.db, id);
+    expect(parent?.result_text).toMatch(
+      /https:\/\/docs\.google\.com\/document\/d\/mock-[\w-]+\/edit/,
+    );
+    expect(parent?.result_json).not.toHaveProperty('runner_state');
+    expect(parent?.result_json).not.toHaveProperty('waiting_on');
+
+    // Proposal instructions carried Bima's hot leads.
+    const proposal = await t.db.query<{ instructions: string }>(
+      `select instructions from public.tasks where parent_task_id = $1 and assignee_id = 'proposal'`,
+      [id],
+    );
+    expect(proposal.rows[0]?.instructions).toContain('PT Logistik Cepat');
+
+    const workflows = n8n.calls.map((c) => c.workflow);
+    expect(workflows).toEqual(expect.arrayContaining(['sheet-read', 'doc-create']));
+    expect(n8n.calls.every((c) => c.signatureValid)).toBe(true);
+    const waits = await t.db.query(
+      `select count(*)::int as n from public.task_events where task_id = $1 and payload ->> 'message' like 'Menunggu hasil subtugas%'`,
+      [id],
+    );
+    expect(waits.rows[0]?.n).toBe(2);
+  }, 90_000);
 });

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { onSubtaskSettled } from './delegation';
 import type { JobDeps } from './deps';
 import { enqueueReview, enqueueRoute, enqueueRun } from './enqueue';
 
@@ -55,6 +56,7 @@ export async function recoverInterruptedWork(deps: JobDeps, orgId: string): Prom
     const tasks = await q.query<{ id: string }>(
       `update public.tasks set status = 'queued', dispatched_at = null
         where org_id = $1 and status in ('routing', 'in_progress')
+          and not (coalesce(result_json, '{}'::jsonb) ? 'waiting_on')
         returning id::text`,
       [orgId],
     );
@@ -96,4 +98,22 @@ export async function recordCancellation(deps: JobDeps, taskId: string): Promise
        from public.tasks where id = $1 and status = 'cancelled'`,
     [taskId],
   );
+  // A cancelled subtask no longer blocks its manager.
+  await onSubtaskSettled(deps, taskId);
+}
+
+/**
+ * Jobs left `active` by a worker that died would block their singleton queues (one run per
+ * agent, one review at a time) until they expire. The worker runs as a single instance, so at
+ * startup every active job is orphaned: fail it; the tasks themselves are re-queued above.
+ */
+export async function failOrphanedJobs(deps: JobDeps, queues: readonly string[]): Promise<number> {
+  const result = await deps.db.query<{ id: string; name: string }>(
+    `select id::text, name from pgboss.job where state = 'active' and name = any($1::text[])`,
+    [queues],
+  );
+  for (const job of result.rows) {
+    await deps.boss.fail(job.name, job.id, { reason: 'Worker restart' });
+  }
+  return result.rows.length;
 }

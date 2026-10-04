@@ -1,13 +1,18 @@
 import type { ToolName } from '@intelligo/shared';
 import type { LlmTool } from '../llm/types';
+import { createGoogleDoc } from './create-google-doc';
+import { delegateTask } from './delegate-task';
 import { listTasks } from './list-tasks';
 import { proposeEmail } from './propose-email';
 import { proposeInvoice } from './propose-invoice';
 import { proposeSchedulePost } from './propose-schedule-post';
 import { proposeWhatsappBroadcast } from './propose-whatsapp-broadcast';
 import { proposeWhatsappReply } from './propose-whatsapp-reply';
+import { readSheet } from './read-sheet';
 import { register } from './registry';
+import { runAnalysisTool } from './run-analysis';
 import { saveDraft } from './save-draft';
+import { scoreLeadsTool } from './score-leads';
 import { searchKnowledge } from './search-knowledge';
 import { submitResult } from './submit-result';
 import type { RegisteredTool } from './types';
@@ -24,6 +29,11 @@ const REGISTRY = new Map<ToolName, RegisteredTool>(
     register(proposeEmail),
     register(proposeInvoice),
     register(proposeSchedulePost),
+    register(delegateTask),
+    register(readSheet),
+    register(scoreLeadsTool),
+    register(runAnalysisTool),
+    register(createGoogleDoc),
   ].map((tool) => [tool.name, tool]),
 );
 

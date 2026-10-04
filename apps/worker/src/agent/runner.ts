@@ -22,6 +22,7 @@ import { getTool, toLlmTools, toolsFor } from '../tools';
 import { SubmitResultInput } from '../tools/submit-result';
 import type { ToolContext } from '../tools/types';
 import {
+  buildSubtaskUpdate,
   buildSystemBlocks,
   buildTaskPrompt,
   type RevisionContext,
@@ -36,14 +37,23 @@ export interface RunnerDeps {
   prices: Readonly<Record<string, ModelPrice>>;
 }
 
+/** Conversation saved while a manager waits for delegated subtasks (tasks.result_json.runner_state). */
+export interface RunnerState {
+  messages: LlmMessageParam[];
+  steps: number;
+}
+
 export type RunOutcome =
   | { kind: 'submitted'; result: SubmitResultInput; steps: number }
+  | { kind: 'suspended'; waitingOn: string[]; state: RunnerState }
   | { kind: 'cancelled' }
   | { kind: 'failed'; error: string };
 
 export interface RunOptions {
   revision?: RevisionContext;
   subtasks?: readonly SubtaskSummary[];
+  /** Continue a suspended run; subtask results are appended as a new user message. */
+  resume?: RunnerState;
   signal?: AbortSignal;
 }
 
@@ -111,17 +121,26 @@ export async function runAgentLoop(
     agent,
     knowledge.map((doc) => formatKnowledgeSnippet(doc)),
   );
-  const messages: LlmMessageParam[] = [
-    {
-      role: 'user',
-      content: buildTaskPrompt(task, { revision: options.revision, subtasks: options.subtasks }),
-    },
-  ];
+  const messages: LlmMessageParam[] = options.resume
+    ? [
+        ...options.resume.messages,
+        { role: 'user', content: buildSubtaskUpdate(options.subtasks ?? []) },
+      ]
+    : [
+        {
+          role: 'user',
+          content: buildTaskPrompt(task, {
+            revision: options.revision,
+            subtasks: options.subtasks,
+          }),
+        },
+      ];
+  const firstStep = options.resume?.steps ?? 0;
   const context: ToolContext = { db, env, log, orgId: task.org_id, task, agent };
   const partial = new PartialWriter(db, task.id);
 
   try {
-    for (let step = 0; step < env.MAX_STEPS; step++) {
+    for (let step = firstStep; step < env.MAX_STEPS; step++) {
       if ((await currentStatus(db, task.id)) !== 'in_progress') return { kind: 'cancelled' };
 
       const response = await llm.turn(
@@ -179,6 +198,7 @@ export async function runAgentLoop(
 
       const results: LlmToolResultBlockParam[] = [];
       let submitted: SubmitResultInput | undefined;
+      const waitingOn: string[] = [];
       for (const block of toolUses) {
         const tool = allowed.has(block.name as never) ? getTool(block.name) : undefined;
         if (!tool) {
@@ -221,6 +241,7 @@ export async function runAgentLoop(
         if (block.name === 'submit_result' && !output.isError) {
           submitted = SubmitResultInput.parse(block.input);
         }
+        if (output.suspendFor) waitingOn.push(output.suspendFor);
       }
 
       if (submitted) {
@@ -228,6 +249,10 @@ export async function runAgentLoop(
         return { kind: 'submitted', result: submitted, steps: step + 1 };
       }
       messages.push({ role: 'user', content: results });
+      if (waitingOn.length > 0) {
+        partial.stop();
+        return { kind: 'suspended', waitingOn, state: { messages, steps: step + 1 } };
+      }
     }
     return {
       kind: 'failed',
