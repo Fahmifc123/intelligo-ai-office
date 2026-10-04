@@ -40,13 +40,12 @@ export default tseslint.config(
     languageOptions: {
       globals: { ...globals.browser },
     },
-    settings: {
-      next: { rootDir: 'apps/web' },
-    },
     rules: {
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
       ...reactHooks.configs.recommended.rules,
+      // App Router only; this rule targets the pages/ directory.
+      '@next/next/no-html-link-for-pages': 'off',
     },
   },
 );

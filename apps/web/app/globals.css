@@ -1,0 +1,110 @@
+@import 'tailwindcss';
+
+/* Intelligo palette (navy + orange), ported from reference/intelligo-ai-office.html.
+   Office canvas colors are read from these variables at runtime, so keep names stable. */
+:root {
+  --bg: #eef1f7;
+  --surface: #ffffff;
+  --surface-2: #f4f6fb;
+  --ink: #14213d;
+  --muted: #5d6b86;
+  --line: #d9dfeb;
+  --navy: #1f3a6b;
+  --accent: #e8761a;
+  --accent-soft: #fdebd9;
+  --accent-ink: #ffffff;
+  --ok: #1d9a60;
+  --warn: #d4920f;
+  --meet: #3a6bd4;
+  --idle: #8b97ad;
+  --floor-a: #e4e8f1;
+  --floor-b: #dde2ed;
+  --floor-meet: #dbe3f3;
+  --floor-pantry: #efe5d8;
+  --wall-top: #c4ccdc;
+  --wall-l: #f8f9fc;
+  --wall-r: #eceff5;
+  --window: #cfe0f7;
+  --desk-top: #f2e4cf;
+  --desk-l: #d8c2a2;
+  --desk-r: #c6ad88;
+  --chair: #2c3d63;
+  --screen: #1f3a6b;
+  --glass: rgba(110, 150, 220, 0.16);
+  --glass-edge: rgba(70, 110, 190, 0.45);
+  --label-bg: rgba(255, 255, 255, 0.95);
+  --label-ink: #14213d;
+  --label-sub: #5d6b86;
+  --shadow: rgba(20, 33, 61, 0.18);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0c1322;
+    --surface: #131c30;
+    --surface-2: #19243c;
+    --ink: #e6ebf5;
+    --muted: #95a2bc;
+    --line: #27344f;
+    --navy: #a9c0f5;
+    --accent: #f59a45;
+    --accent-soft: #3a2a1c;
+    --accent-ink: #1a1206;
+    --ok: #3ccf8a;
+    --warn: #f0b43c;
+    --meet: #6f9bff;
+    --idle: #7c88a1;
+    --floor-a: #1a2440;
+    --floor-b: #17203a;
+    --floor-meet: #1b2950;
+    --floor-pantry: #2a2430;
+    --wall-top: #2c3a5c;
+    --wall-l: #222e4c;
+    --wall-r: #1c2742;
+    --window: #2b4a7e;
+    --desk-top: #4b4033;
+    --desk-l: #3a3128;
+    --desk-r: #2f281f;
+    --chair: #0f1730;
+    --screen: #4f86ff;
+    --glass: rgba(120, 160, 255, 0.1);
+    --glass-edge: rgba(140, 175, 255, 0.38);
+    --label-bg: rgba(20, 29, 50, 0.95);
+    --label-ink: #e6ebf5;
+    --label-sub: #95a2bc;
+    --shadow: rgba(0, 0, 0, 0.4);
+    color-scheme: dark;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-navy: var(--navy);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-meet: var(--meet);
+  --color-idle: var(--idle);
+  --font-display: var(--font-bricolage), 'Segoe UI', system-ui, sans-serif;
+  --font-sans: var(--font-figtree), 'Segoe UI', system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, 'SFMono-Regular', Menlo, monospace;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
