@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { loginAs, waitForOffice } from './helpers/auth';
 import { closeDb, db, resetOffice } from './helpers/db';
 import { clearN8nCalls, n8nCalls } from './helpers/n8n';
@@ -20,7 +20,7 @@ const latestTask = async (title: string) =>
     )
   ).rows[0] as { id: string; status: string; assignee_id: string } | undefined;
 
-async function sendTask(page: import('@playwright/test').Page, text: string): Promise<void> {
+async function sendTask(page: Page, text: string): Promise<void> {
   await page.getByLabel('Isi tugas').fill(text);
   await page.getByRole('button', { name: 'Kirim', exact: true }).click();
 }
