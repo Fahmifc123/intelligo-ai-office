@@ -320,6 +320,7 @@ export const LlmUsageRow = z.object({
   input_tokens: z.number().int().nonnegative(),
   output_tokens: z.number().int().nonnegative(),
   cache_read_tokens: z.number().int().nonnegative(),
+  cache_write_tokens: z.number().int().nonnegative().default(0),
   cost_usd: NumericLike,
   created_at: Timestamp,
 });
@@ -399,6 +400,17 @@ export const WorkerEnv = z.object({
   MAX_STEPS: z.coerce.number().int().positive().default(8),
   /** `scripted` replaces the model with deterministic responses (e2e and offline demos only). */
   LLM_MODE: z.enum(['live', 'scripted']).default('live'),
+  /** Effort for MODEL_WORK runs; empty disables the parameter (for models without effort support). */
+  EFFORT_WORK: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+    z.enum(['low', 'medium', 'high', 'xhigh', 'max']).optional(),
+  ),
+  /** Server-side refusal fallback on MODEL_WORK runs (Claude API only). */
+  LLM_REFUSAL_FALLBACK: BooleanFromString.default(true),
+  /** Optional JSON price table override: {"model-prefix": {input, output, cacheRead, cacheWrite}}. */
+  MODEL_PRICING_JSON: optionalString,
+  /** Total wall-clock limit for one task run (SPEC: 5 minutes). */
+  TASK_TIMEOUT_MS: z.coerce.number().int().positive().default(300_000),
   /** Ambient idle behaviour every 20 s; e2e runs turn it off for deterministic assertions. */
   IDLE_TICK_ENABLED: BooleanFromString.default(true),
   /** Port for the health check endpoint (Fase 8). */

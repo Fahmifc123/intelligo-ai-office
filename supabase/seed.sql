@@ -438,3 +438,47 @@ values
   ('00000000-0000-0000-0000-000000000001'::uuid, 'staff@intelligo.test', 'staff'),
   ('00000000-0000-0000-0000-000000000001'::uuid, 'viewer@intelligo.test', 'viewer')
 on conflict (email) do nothing;
+
+insert into public.knowledge_docs (id, org_id, title, content, tags)
+values
+  ('6b0f3a51-0000-4000-8000-000000000001'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 'Bootcamp Data Science Batch 21 (CONTOH)', '# Bootcamp Data Science Batch 21
+
+CONTOH: ganti dengan data resmi sebelum dipakai.
+
+- Investasi: Rp 7.500.000 (bisa dicicil 2 kali)
+- Mulai kelas: 3 November 2026
+- Durasi: 12 minggu, kelas Weekend (Sabtu-Minggu) dan Weekdays (Senin, Rabu, Jumat malam)
+- Materi: Python, SQL, statistik, machine learning, dashboard, capstone project
+- Benefit: mentor praktisi, portofolio, sertifikat, career coaching
+- Pendaftaran: [link-pendaftaran]', array['program', 'bootcamp', 'harga', 'jadwal']::text[]),
+  ('6b0f3a51-0000-4000-8000-000000000002'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 'Private Course (CONTOH)', '# Private Course
+
+CONTOH: ganti dengan data resmi sebelum dipakai.
+
+- Investasi: Rp 450.000 per sesi (90 menit), minimal paket 8 sesi
+- Jadwal fleksibel, disepakati dengan trainer
+- Topik: Python, data analysis, machine learning, n8n automation', array['program', 'private', 'harga', 'jadwal']::text[]),
+  ('6b0f3a51-0000-4000-8000-000000000003'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 'Corporate Training (CONTOH)', '# Corporate Training
+
+CONTOH: ganti dengan data resmi sebelum dipakai.
+
+- Format: in-house atau online, 2 sampai 5 hari
+- Harga ditentukan per penawaran (jumlah peserta, durasi, kustomisasi materi). Jangan menyebut angka tanpa persetujuan.
+- Struktur proposal: latar belakang, tujuan, silabus per hari, output terukur, trainer, investasi, fasilitas
+- Klien sebelumnya: [nama-klien] (minta izin sebelum menyebut)', array['program', 'corporate', 'proposal', 'harga']::text[]),
+  ('6b0f3a51-0000-4000-8000-000000000004'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 'SOP CS WhatsApp', '# SOP CS WhatsApp
+
+- Sapa dengan "Halo Kak" dan sebut nama bila diketahui.
+- Jawab singkat, jelas, ramah. Tanpa emoji berlebihan.
+- Jangan menjanjikan diskon atau jadwal yang tidak ada di knowledge base.
+- Akhiri dengan ajakan: kirim link pendaftaran atau tawarkan bantuan cek jadwal.
+- Pesan keluar selalu lewat persetujuan Owner (propose_whatsapp_reply).', array['sop-cs', 'cs', 'whatsapp']::text[]),
+  ('6b0f3a51-0000-4000-8000-000000000005'::uuid, '00000000-0000-0000-0000-000000000001'::uuid, 'Info Pembayaran dan Invoice (CONTOH)', '# Info Pembayaran dan Invoice
+
+CONTOH: ganti dengan data resmi sebelum dipakai.
+
+- Intelligo ID non-PKP: invoice tanpa PPN.
+- Rekening resmi: [nama-bank] [nomor-rekening] a.n. [nama-pemilik]
+- Pengingat: H-3 sebelum jatuh tempo, lalu di hari jatuh tempo.
+- Cicilan bootcamp: 2 kali, jarak 30 hari.', array['billing', 'invoice', 'pembayaran']::text[])
+on conflict (id) do nothing;

@@ -1,4 +1,5 @@
 import { agentsConfig } from './agents.config';
+import { KNOWLEDGE_SEED, type KnowledgeSeed } from './knowledge.seed';
 import { buildSystemPromptTemplate } from './prompts';
 import type { AgentConfig } from './schemas';
 
@@ -23,6 +24,7 @@ export interface SeedOptions {
   monthlyTokenBudget?: number;
   agents?: readonly AgentConfig[];
   members?: readonly SeedMember[];
+  knowledge?: readonly KnowledgeSeed[];
 }
 
 const sqlString = (value: string): string => `'${value.replaceAll("'", "''")}'`;
@@ -61,6 +63,13 @@ export function generateSeedSql(options: SeedOptions): string {
     .join(',\n');
 
   const members = options.members ?? DEV_MEMBERS;
+  const knowledge = options.knowledge ?? KNOWLEDGE_SEED;
+  const knowledgeValues = knowledge
+    .map(
+      (doc) =>
+        `  (${sqlString(doc.id)}::uuid, ${org}, ${sqlString(doc.title)}, ${sqlString(doc.content)}, ${sqlTextArray(doc.tags)})`,
+    )
+    .join(',\n');
   const memberValues = members
     .map((m) => `  (${org}, ${sqlString(m.email.toLowerCase())}, ${sqlString(m.role)})`)
     .join(',\n');
@@ -108,5 +117,14 @@ ${memberValues}
 on conflict (email) do nothing;
 `
     : ''
-}`;
+}${
+    knowledge.length > 0
+      ? `
+insert into public.knowledge_docs (id, org_id, title, content, tags)
+values
+${knowledgeValues}
+on conflict (id) do nothing;
+`
+      : ''
+  }`;
 }

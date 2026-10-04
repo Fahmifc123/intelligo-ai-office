@@ -54,3 +54,20 @@ export const AMBIENT_LINES = {
   meeting: ['Rapat mingguan'],
   backToDesk: 'Balik ke meja',
 } as const;
+
+/** Walking speed used by the office renderer (tiles per second). */
+export const WALK_TILES_PER_SECOND = 2.3;
+
+/**
+ * Rough time for a character to walk between two points, used by the worker to let the
+ * manager arrive before the review starts. Paths are longer than straight lines (aisles,
+ * doors), hence the 1.4 factor.
+ */
+export function estimateWalkMs(
+  from: readonly [number, number],
+  to: readonly [number, number],
+): number {
+  const distance = Math.hypot(to[0] - from[0], to[1] - from[1]);
+  const ms = (distance * 1.4 * 1000) / WALK_TILES_PER_SECOND + 400;
+  return Math.round(Math.min(9_000, Math.max(1_200, ms)));
+}
