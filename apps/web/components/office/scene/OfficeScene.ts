@@ -1,5 +1,7 @@
 import type { AgentActivity, OfficeLayout } from '@intelligo/shared';
 import { Application, Container, Graphics, Matrix, Text } from 'pixi.js';
+// Shader/uniform code generation without eval/new Function, so the CSP needs no 'unsafe-eval'.
+import 'pixi.js/unsafe-eval';
 import { AgentSprite, type AgentVisual } from './AgentSprite';
 import { box, glassPane, plant, quad } from './draw';
 import { boxDepth, fitViewport, iso } from './iso';

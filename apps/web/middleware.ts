@@ -24,6 +24,10 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path === p || path.startsWith(p));
   if (!data.user && !isPublic) {
+    // API callers get a status code, not an HTML redirect.
+    if (path.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Sesi tidak valid. Silakan masuk lagi.' }, { status: 401 });
+    }
     const login = request.nextUrl.clone();
     login.pathname = '/login';
     login.search = '';
