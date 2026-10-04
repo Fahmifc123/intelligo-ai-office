@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { loadWorkerEnv, redactDatabaseUrl } from '../src/lib/env';
+import { loadWorkerEnv, redactDatabaseUrl } from '../../src/lib/env';
 
 const valid = {
   DATABASE_URL: 'postgresql://postgres:secret@127.0.0.1:54322/postgres',

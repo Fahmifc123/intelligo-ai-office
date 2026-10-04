@@ -1,4 +1,4 @@
-import layoutJson from '../../../config/office.layout.json';
+import layoutJson from '../../../config/office.layout.json' with { type: 'json' };
 import { OfficeLayout, type Desk, type Point } from './schemas';
 
 /** Validated office layout. Throws at import time if config/office.layout.json is invalid. */

@@ -1,30 +1,40 @@
+import { startWorker } from './app';
 import { createBoss } from './lib/boss';
 import { createDb, readSeedStatus } from './lib/db';
+import { createHealthState, startHealthServer } from './lib/health';
 import { loadWorkerEnv, redactDatabaseUrl } from './lib/env';
+import { createLogger } from './lib/log';
 
 async function main(): Promise<void> {
+  const log = createLogger();
   const env = loadWorkerEnv();
-  console.log(`[worker] menghubungkan ke ${redactDatabaseUrl(env.DATABASE_URL)}`);
+  log.info({ database: redactDatabaseUrl(env.DATABASE_URL) }, 'menghubungkan ke database');
 
   const db = createDb(env.DATABASE_URL);
   const seed = await readSeedStatus(db, env.ORG_ID);
   if (seed.agents === 0) {
-    console.warn(
-      '[worker] belum ada agen untuk ORG_ID ini. Jalankan `supabase db reset` untuk migrasi + seed.',
-    );
+    log.warn('belum ada agen untuk ORG_ID ini, jalankan `supabase db reset` untuk migrasi + seed');
   } else {
-    console.log(`[worker] ${seed.agents} agen, ${seed.agentStates} agent_states terdaftar`);
+    log.info({ agents: seed.agents, agentStates: seed.agentStates }, 'agen terdaftar');
   }
 
-  const boss = createBoss(env.DATABASE_URL);
+  const boss = createBoss(env.DATABASE_URL, log);
   await boss.start();
-  console.log(`[worker] pg-boss aktif (DRY_RUN=${String(env.DRY_RUN)})`);
+  const health = createHealthState();
+  const worker = await startWorker({ env, db, boss, log, rng: Math.random, health });
+  const healthServer = await startHealthServer(env.HEALTH_PORT, db, health);
+  log.info(
+    { dryRun: env.DRY_RUN, llmMode: env.LLM_MODE, healthPort: env.HEALTH_PORT },
+    'worker siap',
+  );
 
   let stopping = false;
   const shutdown = async (signal: NodeJS.Signals): Promise<void> => {
     if (stopping) return;
     stopping = true;
-    console.log(`[worker] ${signal} diterima, berhenti...`);
+    log.info({ signal }, 'berhenti');
+    healthServer.close();
+    await worker.stop();
     await boss.stop({ graceful: true, timeout: 10_000 });
     await db.end();
     process.exit(0);

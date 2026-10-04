@@ -11,4 +11,4 @@ export type SpotName = 'pantry' | 'meeting' | 'lounge' | 'wander';
  * Value of agent_states.target_spot. The client resolves it to coordinates;
  * positions are never stored in the database.
  */
-export type TargetSpot = 'desk' | Exclude<SpotName, 'wander'> | `desk:${AgentId}`;
+export type TargetSpot = 'desk' | SpotName | `desk:${AgentId}`;

@@ -341,6 +341,8 @@ export const SettingsRow = z.object({
   auto_approve_kinds: z.array(ActionKind),
   dry_run: z.boolean(),
   usd_to_idr: NumericLike,
+  meeting_until: NullableTimestamp,
+  break_mode: z.boolean(),
   created_at: Timestamp,
   updated_at: Timestamp,
 });
@@ -362,6 +364,23 @@ export const PublicEnv = z.object({
 });
 export type PublicEnv = z.infer<typeof PublicEnv>;
 
+export const MemberRole = z.enum(['owner', 'staff', 'viewer']);
+export type MemberRole = z.infer<typeof MemberRole>;
+
+/** Server-side env for the Next.js app (route handlers, server actions). Never sent to the browser. */
+export const WebServerEnv = z.object({
+  NEXT_PUBLIC_SUPABASE_URL: z.url(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  ORG_ID: z.guid(),
+  /** Chat (Fase 4) calls the model from the server; required only when chat is used. */
+  ANTHROPIC_API_KEY: optionalString,
+  MODEL_WORK: z.string().min(1),
+  MODEL_FAST: z.string().min(1),
+  USD_TO_IDR: z.coerce.number().positive().default(16000),
+  LLM_MODE: z.enum(['live', 'scripted']).default('live'),
+});
+export type WebServerEnv = z.infer<typeof WebServerEnv>;
+
 /** Worker talks to Postgres directly (as the service role would), never through PostgREST. */
 export const WorkerEnv = z.object({
   DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, 'DATABASE_URL harus URL Postgres'),
@@ -378,5 +397,11 @@ export const WorkerEnv = z.object({
   DRY_RUN: BooleanFromString.default(true),
   USD_TO_IDR: z.coerce.number().positive().default(16000),
   MAX_STEPS: z.coerce.number().int().positive().default(8),
+  /** `scripted` replaces the model with deterministic responses (e2e and offline demos only). */
+  LLM_MODE: z.enum(['live', 'scripted']).default('live'),
+  /** Ambient idle behaviour every 20 s; e2e runs turn it off for deterministic assertions. */
+  IDLE_TICK_ENABLED: BooleanFromString.default(true),
+  /** Port for the health check endpoint (Fase 8). */
+  HEALTH_PORT: z.coerce.number().int().positive().default(8787),
 });
 export type WorkerEnv = z.infer<typeof WorkerEnv>;
