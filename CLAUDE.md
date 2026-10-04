@@ -38,6 +38,8 @@ Baca `SPEC.md` sebelum mulai. SPEC.md adalah sumber kebenaran; jika ada konflik 
 - `pnpm test` — unit + integrasi (LLM di-mock)
 - `pnpm test:e2e` — Playwright (butuh `pnpm db:start`; worker jalan dengan `LLM_MODE=scripted`)
 - `pnpm test:live` — memanggil API asli (opsional, butuh API key)
+- `pnpm check:bundle` — build web lalu pastikan bundle client tidak memuat secret server
+- `pnpm db:seed:prod` — buat `supabase/seed.production.sql` dari `.env.production` (lihat `docs/DEPLOY.md`)
 
 ## Referensi visual
 

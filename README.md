@@ -30,3 +30,17 @@ Setelah mengubah `packages/shared/src/agents.config.ts`, jalankan `pnpm db:seed:
 ```bash
 pnpm typecheck && pnpm lint && pnpm test
 ```
+
+Test lain:
+
+```bash
+pnpm db:test         # pgTAP: tabel, seed, RLS, view biaya, publikasi realtime
+pnpm test:e2e        # Playwright; butuh `pnpm db:start`, worker berjalan dengan LLM_MODE=scripted
+E2E_WEB_COMMAND='pnpm start' pnpm --filter @intelligo/web test:e2e   # terhadap build produksi (setelah `pnpm build`)
+pnpm test:live       # pipeline asli ke Claude API; dilewati bila ANTHROPIC_API_KEY kosong
+pnpm check:bundle    # build web lalu pastikan bundle client tidak memuat secret server
+```
+
+## Deploy
+
+Vercel (web), Railway atau Fly.io (worker, satu instance), Supabase cloud, domain `office.intelligo.id`. Langkah lengkap, daftar environment variable, health check, dan alert ada di [docs/DEPLOY.md](docs/DEPLOY.md).
