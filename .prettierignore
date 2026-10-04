@@ -1,0 +1,9 @@
+node_modules
+.next
+dist
+.turbo
+pnpm-lock.yaml
+reference
+supabase/.temp
+supabase/seed.sql
+next-env.d.ts

@@ -1,0 +1,1019 @@
+<title>Intelligo AI Office</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one-screen app. Isometric office canvas on the left, operations panel (composer, team, board, activity, chat) on the right; stacks on phones. */
+:root {
+  --bg: #eef1f7;
+  --surface: #ffffff;
+  --surface-2: #f4f6fb;
+  --ink: #14213d;
+  --muted: #5d6b86;
+  --line: #d9dfeb;
+  --navy: #1f3a6b;
+  --accent: #e8761a;
+  --accent-soft: #fdebd9;
+  --accent-ink: #ffffff;
+  --ok: #1d9a60;
+  --warn: #d4920f;
+  --meet: #3a6bd4;
+  --idle: #8b97ad;
+  --floor-a: #e4e8f1;
+  --floor-b: #dde2ed;
+  --floor-meet: #dbe3f3;
+  --floor-pantry: #efe5d8;
+  --wall-top: #c4ccdc;
+  --wall-l: #f8f9fc;
+  --wall-r: #eceff5;
+  --window: #cfe0f7;
+  --desk-top: #f2e4cf;
+  --desk-l: #d8c2a2;
+  --desk-r: #c6ad88;
+  --chair: #2c3d63;
+  --screen: #1f3a6b;
+  --glass: rgba(110,150,220,.16);
+  --glass-edge: rgba(70,110,190,.45);
+  --label-bg: rgba(255,255,255,.95);
+  --label-ink: #14213d;
+  --label-sub: #5d6b86;
+  --shadow: rgba(20,33,61,.18);
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0c1322; --surface: #131c30; --surface-2: #19243c; --ink: #e6ebf5; --muted: #95a2bc; --line: #27344f;
+    --navy: #a9c0f5; --accent: #f59a45; --accent-soft: #3a2a1c; --accent-ink: #1a1206;
+    --ok: #3ccf8a; --warn: #f0b43c; --meet: #6f9bff; --idle: #7c88a1;
+    --floor-a: #1a2440; --floor-b: #17203a; --floor-meet: #1b2950; --floor-pantry: #2a2430;
+    --wall-top: #2c3a5c; --wall-l: #222e4c; --wall-r: #1c2742; --window: #2b4a7e;
+    --desk-top: #4b4033; --desk-l: #3a3128; --desk-r: #2f281f; --chair: #0f1730; --screen: #4f86ff;
+    --glass: rgba(120,160,255,.10); --glass-edge: rgba(140,175,255,.38);
+    --label-bg: rgba(20,29,50,.95); --label-ink: #e6ebf5; --label-sub: #95a2bc; --shadow: rgba(0,0,0,.4);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0c1322; --surface: #131c30; --surface-2: #19243c; --ink: #e6ebf5; --muted: #95a2bc; --line: #27344f;
+  --navy: #a9c0f5; --accent: #f59a45; --accent-soft: #3a2a1c; --accent-ink: #1a1206;
+  --ok: #3ccf8a; --warn: #f0b43c; --meet: #6f9bff; --idle: #7c88a1;
+  --floor-a: #1a2440; --floor-b: #17203a; --floor-meet: #1b2950; --floor-pantry: #2a2430;
+  --wall-top: #2c3a5c; --wall-l: #222e4c; --wall-r: #1c2742; --window: #2b4a7e;
+  --desk-top: #4b4033; --desk-l: #3a3128; --desk-r: #2f281f; --chair: #0f1730; --screen: #4f86ff;
+  --glass: rgba(120,160,255,.10); --glass-edge: rgba(140,175,255,.38);
+  --label-bg: rgba(20,29,50,.95); --label-ink: #e6ebf5; --label-sub: #95a2bc; --shadow: rgba(0,0,0,.4);
+  color-scheme: dark;
+}
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+* { box-sizing: border-box; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.app { height: 100%; display: grid; grid-template-rows: auto 1fr; padding-inline: 16px; padding-block: 12px; gap: 12px; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; }
+.mark { width: 34px; height: 34px; border-radius: 9px; background: var(--navy); display: grid; place-items: center; }
+.mark svg { width: 20px; height: 20px; }
+.brand h1 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 20px; letter-spacing: -.01em; line-height: 1.1; }
+.brand h1 span { color: var(--accent); }
+.brand p { margin: 0; color: var(--muted); font-size: 12px; }
+.meta { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.chip b { color: var(--ink); font-weight: 600; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.clock { font-family: var(--font-mono); color: var(--ink); }
+
+.main { display: grid; grid-template-columns: minmax(0,1fr) 390px; gap: 12px; min-height: 0; }
+.stage { display: flex; flex-direction: column; min-height: 0; min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.toolbar { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.tbtn { border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 6px 11px; font-size: 13px; font-weight: 600; display: inline-flex; gap: 6px; align-items: center; }
+.tbtn[aria-pressed="true"] { background: var(--navy); color: var(--surface); border-color: var(--navy); }
+.tbtn:hover { border-color: var(--muted); }
+.legend { margin-left: auto; display: flex; gap: 12px; font-size: 12px; color: var(--muted); flex-wrap: wrap; }
+.legend span { display: inline-flex; gap: 5px; align-items: center; }
+.canvas-wrap { position: relative; flex: 1; min-height: 0; }
+canvas { display: block; width: 100%; height: 100%; }
+.hint { position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: var(--muted); background: var(--surface); border: 1px solid var(--line); padding: 4px 9px; border-radius: 999px; pointer-events: none; }
+
+.panel { display: flex; flex-direction: column; gap: 10px; min-height: 0; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.composer { padding: 12px; display: grid; gap: 8px; }
+.composer label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+textarea { width: 100%; resize: none; border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; background: var(--surface-2); min-height: 62px; }
+.row { display: flex; gap: 8px; align-items: center; }
+select { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 7px 8px; background: var(--surface-2); }
+.primary { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 8px; padding: 8px 14px; font-weight: 700; white-space: nowrap; }
+.primary:disabled { opacity: .5; cursor: default; }
+.ideas { display: flex; gap: 6px; flex-wrap: wrap; }
+.idea { border: 1px dashed var(--line); background: transparent; border-radius: 999px; padding: 3px 9px; font-size: 12px; color: var(--muted); text-align: left; }
+.idea:hover { color: var(--ink); border-color: var(--accent); }
+
+.tabs-card { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.tabs { display: flex; border-bottom: 1px solid var(--line); }
+.tab { flex: 1; border: 0; background: transparent; padding: 10px 6px; font-weight: 600; color: var(--muted); border-bottom: 2px solid transparent; font-size: 13px; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+.tab .n { font-family: var(--font-mono); font-size: 11px; margin-left: 4px; color: var(--muted); }
+.pane { flex: 1; min-height: 0; overflow-y: auto; padding: 10px 12px; }
+
+.agent-row { width: 100%; display: grid; grid-template-columns: 32px 1fr auto; gap: 10px; align-items: center; padding: 7px 6px; border: 0; background: transparent; border-radius: 10px; text-align: left; }
+.agent-row:hover { background: var(--surface-2); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; font-size: 13px; }
+.agent-row .who { min-width: 0; }
+.agent-row .who b { display: block; font-size: 13px; }
+.agent-row .who small { display: block; color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.state { font-size: 11px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; color: var(--muted); }
+
+.col-title { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 6px 2px 6px; }
+.task { border: 1px solid var(--line); border-radius: 10px; padding: 9px 10px; margin-bottom: 8px; background: var(--surface-2); }
+.task-head { display: flex; gap: 8px; align-items: flex-start; justify-content: space-between; }
+.task-title { font-weight: 600; font-size: 13px; min-width: 0; }
+.task-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.badge { font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 2px 7px; border-radius: 999px; white-space: nowrap; border: 1px solid var(--line); color: var(--muted); }
+.badge.doing { color: var(--ok); border-color: var(--ok); }
+.badge.review { color: var(--meet); border-color: var(--meet); }
+.badge.done { background: var(--ok); color: var(--surface); border-color: var(--ok); }
+.badge.revisi { background: var(--warn); color: var(--surface); border-color: var(--warn); }
+.badge.example { border-style: dashed; }
+.result { margin-top: 8px; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 9px; max-height: 260px; overflow-y: auto; }
+.review-note { margin-top: 6px; font-size: 12px; color: var(--muted); }
+.review-note b { color: var(--ink); }
+.task-actions { display: flex; gap: 6px; margin-top: 6px; }
+.link { border: 0; background: transparent; color: var(--accent); font-weight: 600; font-size: 12px; padding: 0; }
+.empty { color: var(--muted); font-size: 13px; padding: 6px 2px 12px; }
+
+.feed-item { display: grid; grid-template-columns: 46px 1fr; gap: 8px; font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.feed-item time { font-family: var(--font-mono); font-size: 11px; color: var(--muted); padding-top: 2px; }
+
+.chat { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.chat-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.chat-head .who { flex: 1; min-width: 0; }
+.chat-head b { display: block; }
+.chat-head small { color: var(--muted); font-size: 12px; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.back { border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px; padding: 5px 9px; font-size: 12px; font-weight: 600; }
+.msgs { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+.msg { max-width: 88%; padding: 8px 11px; border-radius: 12px; font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.me { align-self: flex-end; background: var(--navy); color: var(--surface); border-bottom-right-radius: 4px; }
+.msg.ai { align-self: flex-start; background: var(--surface-2); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+.msg.sys { align-self: center; font-size: 12px; color: var(--muted); background: transparent; }
+.chat-form { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); }
+.chat-form input { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--surface-2); }
+
+@media (max-width: 960px) {
+  html, body { height: auto; }
+  .app { height: auto; }
+  .main { grid-template-columns: 1fr; }
+  .canvas-wrap { flex: none; height: clamp(300px, 70vw, 560px); }
+  .tabs-card { min-height: 460px; }
+  .legend { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="app">
+  <header class="top">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M4 9.5 12 5l8 4.5-8 4.5-8-4.5Z" fill="var(--accent)"/><path d="M4 14l8 4.5 8-4.5" stroke="#fff" stroke-width="2" stroke-linejoin="round"/></svg>
+      </div>
+      <div>
+        <h1>Intelligo <span>AI Office</span></h1>
+        <p>Kantor virtual, karyawannya agen AI</p>
+      </div>
+    </div>
+    <div class="meta">
+      <span class="chip"><span class="dot" style="background:var(--ok)"></span><b id="stWork">0</b> bekerja</span>
+      <span class="chip"><span class="dot" style="background:var(--warn)"></span><b id="stBreak">0</b> istirahat</span>
+      <span class="chip"><span class="dot" style="background:var(--meet)"></span><b id="stMeet">0</b> rapat</span>
+      <span class="chip">Tugas selesai <b id="stDone">0</b></span>
+      <span class="chip" id="modeChip"><span class="dot" style="background:var(--idle)"></span>Menyambungkan AI…</span>
+      <span class="chip clock" id="clock">--:--</span>
+    </div>
+  </header>
+
+  <div class="main">
+    <section class="stage" aria-label="Denah kantor">
+      <div class="toolbar">
+        <button class="tbtn" id="btnMeet" aria-pressed="false">Rapat tim</button>
+        <button class="tbtn" id="btnBreak" aria-pressed="false">Jam istirahat</button>
+        <button class="tbtn" id="btnLabels" aria-pressed="true">Label status</button>
+        <div class="legend">
+          <span><span class="dot" style="background:var(--ok)"></span>Bekerja</span>
+          <span><span class="dot" style="background:var(--warn)"></span>Istirahat</span>
+          <span><span class="dot" style="background:var(--meet)"></span>Rapat</span>
+          <span><span class="dot" style="background:var(--idle)"></span>Santai</span>
+        </div>
+      </div>
+      <div class="canvas-wrap" id="wrap">
+        <canvas id="cv" aria-label="Kantor isometrik dengan 12 karyawan AI"></canvas>
+        <div class="hint">Klik karakter untuk chat</div>
+      </div>
+    </section>
+
+    <aside class="panel">
+      <form class="card composer" id="taskForm">
+        <label for="taskText">Tugas baru</label>
+        <textarea id="taskText" placeholder="Contoh: buat caption promo Bootcamp Batch 21 untuk Instagram"></textarea>
+        <div class="ideas" id="ideas"></div>
+        <div class="row">
+          <select id="assignee" aria-label="Pilih penerima tugas"></select>
+          <button class="primary" id="sendTask" type="submit">Kirim tugas</button>
+        </div>
+      </form>
+
+      <div class="card tabs-card" id="tabsCard">
+        <div class="tabs" role="tablist">
+          <button class="tab" role="tab" id="tab-team" aria-selected="true" data-tab="team">Tim</button>
+          <button class="tab" role="tab" id="tab-board" aria-selected="false" data-tab="board">Papan tugas<span class="n" id="nTasks">0</span></button>
+          <button class="tab" role="tab" id="tab-feed" aria-selected="false" data-tab="feed">Aktivitas</button>
+        </div>
+        <div class="pane" id="pane-team"></div>
+        <div class="pane" id="pane-board" hidden></div>
+        <div class="pane" id="pane-feed" hidden></div>
+      </div>
+
+      <div class="card tabs-card chat" id="chatCard" hidden>
+        <div class="chat-head">
+          <div class="avatar" id="chatAvatar">A</div>
+          <div class="who"><b id="chatName">-</b><small id="chatRole">-</small></div>
+          <button class="back" id="chatBack" type="button">Tutup</button>
+        </div>
+        <div class="msgs" id="msgs" aria-live="polite"></div>
+        <form class="chat-form" id="chatForm">
+          <input id="chatInput" placeholder="Tulis pesan…" autocomplete="off">
+          <button class="primary" id="chatSend" type="submit">Kirim</button>
+        </form>
+      </div>
+    </aside>
+  </div>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+/* ---------- Data ---------- */
+const COMPANY = "Intelligo ID, lembaga pelatihan Data Science & AI di Bandung (bootcamp, private course, dan corporate training untuk perusahaan dan instansi pemerintah)";
+
+const DESK_COLS = [1.8, 4.8, 7.8, 10.8];
+const DESK_ROWS = [2, 6, 10];
+const AISLES = [4.2, 8.2, 12.2];
+
+const AGENTS = [
+  { id: "manager", name: "Raka", role: "AI Manager", color: "#1f3a6b", hair: "#1b1b1f", skin: "#e8b48c", desk: [3, 0],
+    lines: ["Cek hasil sebelum dikirim", "Prioritaskan antrean tugas", "Pantau KPI mingguan"],
+    focus: "mengkoordinasi tim, membagi tugas, dan mereview kualitas hasil kerja",
+    demo: ["Prioritas minggu ini: closing corporate training dan isi kuota Batch 21.", "Semua output wajib lewat review sebelum dikirim ke klien.", "Laporan progres dikirim tiap Jumat sore."] },
+  { id: "cs", name: "Sinta", role: "CS Chat 24 Jam", color: "#e8761a", hair: "#2a1a12", skin: "#f0c39e", desk: [0, 0],
+    lines: ["Balas chat calon peserta", "Follow-up pendaftar kemarin", "Jawab pertanyaan jadwal kelas"],
+    focus: "membalas chat WhatsApp calon peserta dengan ramah, jelas, dan mengarahkan ke pendaftaran",
+    demo: ["Halo Kak, terima kasih sudah menghubungi Intelligo ID.", "Untuk detail program dan jadwal terbaru, boleh saya kirimkan brosurnya?", "Kalau Kakak berkenan, saya bantu cek slot kelas yang paling cocok."] },
+  { id: "writer", name: "Dimas", role: "Content Writer", color: "#2f8f83", hair: "#151515", skin: "#d9a07a", desk: [1, 0],
+    lines: ["Draft artikel blog", "Tulis headline landing page", "Riset topik konten"],
+    focus: "menulis caption, artikel, dan copy pemasaran yang persuasif",
+    demo: ["Hook: Mau pindah karier ke Data Science tanpa mulai dari nol sendirian?", "Isi: belajar bareng mentor praktisi, project nyata, kelas weekend dan weekdays.", "CTA: Daftar sekarang, kuota terbatas."] },
+  { id: "socmed", name: "Laras", role: "Social Media Manager", color: "#c2417a", hair: "#3b2416", skin: "#f2c8a5", desk: [2, 0],
+    lines: ["Jadwalkan 14 posting", "Balas komentar Instagram", "Cek insight Reels"],
+    focus: "menyusun kalender konten dan strategi media sosial",
+    demo: ["Senin: carousel tips Python.", "Rabu: Reels testimoni alumni.", "Jumat: live Q&A seputar karier data."] },
+  { id: "leads", name: "Bima", role: "B2B Lead Generator", color: "#5b5bd6", hair: "#121212", skin: "#c98e65", desk: [0, 1],
+    lines: ["Skor leads: panas / dingin", "Cari kontak HR perusahaan", "Rapikan data CRM"],
+    focus: "mencari dan menilai calon klien corporate training",
+    demo: ["Lead panas: perusahaan yang baru buka lowongan tim data.", "Lead hangat: instansi yang punya anggaran pelatihan tahun depan.", "Langkah berikutnya: kirim penawaran singkat dan jadwalkan call."] },
+  { id: "proposal", name: "Nadia", role: "Proposal Writer", color: "#8a5a2b", hair: "#24160e", skin: "#efc09a", desk: [1, 1],
+    lines: ["Susun proposal corporate", "Revisi RAB pelatihan", "Siapkan quotation"],
+    focus: "menyusun proposal dan penawaran pelatihan corporate yang rapi dan meyakinkan",
+    demo: ["Latar belakang dan tujuan pelatihan.", "Silabus per hari beserta output yang terukur.", "Investasi, durasi, dan fasilitas yang didapat peserta."] },
+  { id: "billing", name: "Arif", role: "Invoice & Billing", color: "#4e7d2e", hair: "#1a1a1a", skin: "#d6a27c", desk: [2, 1],
+    lines: ["Tagih invoice jatuh tempo", "Rekap pembayaran cicilan", "Kirim bukti bayar"],
+    focus: "mengelola invoice, penagihan, dan pengingat pembayaran dengan sopan",
+    demo: ["Kirim pengingat H-3 sebelum jatuh tempo.", "Lampirkan invoice dan nomor rekening resmi.", "Konfirmasi ulang setelah pembayaran diterima."] },
+  { id: "curriculum", name: "Wulan", role: "Curriculum Designer", color: "#7a3fb0", hair: "#2b1810", skin: "#f3cba8", desk: [3, 1],
+    lines: ["Update silabus bootcamp", "Susun modul n8n", "Buat rubrik penilaian"],
+    focus: "merancang silabus, modul, dan learning outcome pelatihan",
+    demo: ["Pertemuan 1: konsep dasar dan studi kasus.", "Pertemuan 2: praktik terpandu.", "Pertemuan 3: mini project dan presentasi."] },
+  { id: "analyst", name: "Yoga", role: "Data Analyst", color: "#1f7fb8", hair: "#0f0f12", skin: "#cf9670", desk: [0, 2],
+    lines: ["Grafik omzet 3 bulan", "Analisis konversi iklan", "Dashboard peserta aktif"],
+    focus: "menganalisis data penjualan, pendaftaran, dan performa kampanye",
+    demo: ["Konversi tertinggi datang dari kanal WhatsApp.", "Pendaftaran naik menjelang akhir bulan.", "Saran: perbesar retargeting untuk pengunjung halaman harga."] },
+  { id: "ads", name: "Fajar", role: "Ads Specialist", color: "#b8452f", hair: "#161616", skin: "#e0aa82", desk: [1, 2],
+    lines: ["Atur budget iklan Meta", "A/B test creative", "Optimasi audiens"],
+    focus: "merencanakan dan mengoptimasi iklan berbayar di Meta dan Google",
+    demo: ["Pisahkan kampanye awareness dan konversi.", "Uji 3 creative dengan hook berbeda.", "Matikan iklan dengan CPL di atas target setelah 3 hari."] },
+  { id: "scheduler", name: "Citra", role: "Admin Kelas & Jadwal", color: "#2d8a4e", hair: "#3a2a1a", skin: "#f1c6a2", desk: [2, 2],
+    lines: ["Atur jadwal trainer", "Kirim link Zoom kelas", "Rekap absensi peserta"],
+    focus: "mengatur jadwal kelas, trainer, dan komunikasi teknis ke peserta",
+    demo: ["Konfirmasi ketersediaan trainer H-7.", "Kirim link kelas dan materi H-1.", "Rekap absensi setelah sesi selesai."] },
+  { id: "success", name: "Intan", role: "Customer Success", color: "#c28a12", hair: "#20130c", skin: "#eebf98", desk: [3, 2],
+    lines: ["Survei kepuasan alumni", "Kumpulkan testimoni", "Tawarkan kelas lanjutan"],
+    focus: "menjaga kepuasan peserta dan alumni serta mendorong repeat order",
+    demo: ["Kirim survei singkat 5 pertanyaan setelah kelas.", "Minta izin memakai testimoni terbaik.", "Tawarkan diskon alumni untuk kelas lanjutan."] }
+];
+
+const IDEAS = [
+  "Buat caption promo Bootcamp Batch 21 untuk Instagram",
+  "Balas calon peserta yang tanya harga private course",
+  "Outline proposal training n8n untuk perusahaan logistik",
+  "Pesan pengingat invoice yang jatuh tempo besok"
+];
+
+const SPOTS = {
+  pantry: [{x:19.7,y:10.4},{x:19.7,y:11.3},{x:19.7,y:12.2},{x:19.1,y:13.8}],
+  lounge: [{x:16,y:13},{x:17,y:13},{x:17.6,y:12.2},{x:16.2,y:11.6},{x:18,y:11.2},{x:15.5,y:10.4},{x:15.2,y:14.8},{x:18.8,y:14.8}],
+  meeting: [{x:16.1,y:3.5},{x:16.1,y:4.5},{x:19.9,y:3.5},{x:19.9,y:4.5},{x:17.2,y:2.5},{x:18,y:2.5},{x:18.8,y:2.5},{x:17.2,y:5.5},{x:18,y:5.5},{x:18.8,y:5.5},{x:16.2,y:6.3},{x:19.8,y:6.3}],
+  wander: [{x:13.5,y:2},{x:13.5,y:14},{x:6,y:14.5},{x:2.2,y:14.5},{x:9.5,y:14.5}]
+};
+
+/* ---------- State ---------- */
+const agents = AGENTS.map((a) => {
+  const cx = DESK_COLS[a.desk[0]], dy = DESK_ROWS[a.desk[1]];
+  const seat = { x: cx, y: dy + 1.25 };
+  return Object.assign({}, a, {
+    cx, dy, seat, x: seat.x, y: seat.y, path: [], onArrive: null,
+    state: "working", status: a.lines[0], sitting: true, busy: false, reviewing: false,
+    away: false, queue: [], chat: [], nextIdle: performance.now() + 4000 + Math.random() * 9000,
+    step: Math.random() * 6, spot: null
+  });
+});
+const byId = Object.fromEntries(agents.map((a) => [a.id, a]));
+const manager = byId.manager;
+
+let tasks = [
+  { id: 1, title: "Caption Instagram promo Bootcamp Batch 21", agentId: "writer", status: "done", example: true,
+    result: "Bingung mulai belajar data dari mana?\n\nDi Bootcamp Data Science Intelligo ID kamu belajar langsung dari mentor praktisi, mengerjakan project nyata, dan punya portofolio saat lulus. Tersedia kelas Weekend dan Weekdays.\n\nKuota Batch 21 terbatas. Klik link di bio untuk daftar.",
+    review: { verdict: "Disetujui", catatan: "Hook jelas, CTA kuat. Siap dijadwalkan Laras." }, open: false },
+  { id: 2, title: "Skor 5 leads dari form website", agentId: "leads", status: "done", example: true,
+    result: "Panas (2): perusahaan fintech yang membuka lowongan data analyst, dan BUMD yang menanyakan jadwal in-house training.\nHangat (2): startup edukasi dan pabrik FMCG yang minta brosur.\nDingin (1): mahasiswa yang salah isi form B2B.\n\nLangkah berikutnya: Nadia siapkan penawaran untuk 2 lead panas.",
+    review: { verdict: "Disetujui", catatan: "Sudah ada next step yang jelas." }, open: false }
+];
+let taskSeq = 3;
+let feed = [];
+let mode = { meeting: false, break: false, labels: true, meetingTimer: 0 };
+let sample = null;
+let sampleState = "pending"; // pending | ready | demo
+let selectedId = null;
+let hoverId = null;
+let managerLock = Promise.resolve();
+
+/* ---------- Helpers ---------- */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const short = (s, n = 26) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
+const rnd = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const nowHM = () => new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" });
+const clean = (t) => String(t || "").replace(/^#{1,6}\s*/gm, "").replace(/\*\*(.+?)\*\*/g, "$1").trim();
+
+function log(text) {
+  feed.unshift({ t: nowHM(), text });
+  if (feed.length > 80) feed.pop();
+  ui();
+}
+log("Kantor dibuka. 12 karyawan AI masuk kerja.");
+log("Raka (AI Manager) menyetujui caption Batch 21 dari Dimas. (contoh)");
+log("Bima selesai menilai 5 leads dari form website. (contoh)");
+
+function persona(a) {
+  return `Kamu adalah ${a.name}, karyawan AI dengan peran ${a.role} di ${COMPANY}. Tugas utamamu: ${a.focus}. Selalu jawab dalam bahasa Indonesia yang natural dan profesional, ringkas dan praktis, tanpa emoji, tanpa heading markdown. Jangan mengarang data spesifik (harga, nama klien, angka) yang tidak diberikan; pakai placeholder seperti [harga] bila perlu.`;
+}
+
+/* ---------- Pathing ---------- */
+const inLeft = (p) => p.x < 13;
+const inMeeting = (p) => p.x > 14.8 && p.y < 7.2;
+const nearestAisle = (y) => AISLES.reduce((b, a) => (Math.abs(a - y) < Math.abs(b - y) ? a : b));
+function exitPts(p) {
+  if (inLeft(p)) { const ay = nearestAisle(p.y); return [{ x: p.x, y: ay }, { x: 13.5, y: ay }]; }
+  if (inMeeting(p)) { const wy = p.y < 4 ? 2.4 : 6.2; return [{ x: p.x, y: wy }, { x: 15.6, y: wy }, { x: 15.5, y: 4 }, { x: 13.5, y: 4 }]; }
+  return [{ x: 13.5, y: p.y }];
+}
+function route(a, b) {
+  if (inLeft(a) && inLeft(b) && nearestAisle(a.y) === nearestAisle(b.y)) {
+    const ay = nearestAisle(a.y); return [{ x: a.x, y: ay }, { x: b.x, y: ay }, { x: b.x, y: b.y }];
+  }
+  const out = exitPts(a);
+  const inn = exitPts(b).reverse();
+  return [...out, ...inn, { x: b.x, y: b.y }];
+}
+function goTo(a, target, cb) {
+  a.sitting = false;
+  a.path = route({ x: a.x, y: a.y }, target);
+  a.onArrive = cb || null;
+}
+function walkTo(a, target) { return new Promise((res) => goTo(a, target, res)); }
+function goSeat(a, cb) {
+  a.spot = null;
+  goTo(a, a.seat, () => { a.sitting = true; a.away = false; cb && cb(); });
+}
+function takeSpot(list) {
+  const used = new Set(agents.map((a) => a.spot).filter(Boolean));
+  const free = list.filter((s) => !used.has(s));
+  return free.length ? rnd(free) : rnd(list);
+}
+
+/* ---------- Behaviour ---------- */
+function idleTick(a, now) {
+  if (a.busy || a.reviewing || mode.meeting || mode.break) return;
+  if (a.path.length || now < a.nextIdle) return;
+  a.nextIdle = now + 7000 + Math.random() * 9000;
+  if (a.away) {
+    goSeat(a, () => { a.state = "working"; a.status = rnd(a.lines); ui(); });
+    a.state = "idle"; a.status = "Balik ke meja"; ui();
+    return;
+  }
+  const r = Math.random();
+  if (r < 0.62) { a.state = "working"; a.status = rnd(a.lines); }
+  else if (r < 0.82) {
+    a.spot = takeSpot(SPOTS.pantry); a.away = true; a.state = "break"; a.status = "Ngopi dulu";
+    goTo(a, a.spot);
+  } else {
+    a.spot = takeSpot(SPOTS.lounge.concat(SPOTS.wander)); a.away = true; a.state = "idle"; a.status = rnd(["Jalan-jalan bentar", "Dengerin musik", "Stretching"]);
+    goTo(a, a.spot);
+  }
+  ui();
+}
+
+function setMeeting(on) {
+  mode.meeting = on;
+  if (on && mode.break) setBreak(false, true);
+  $("btnMeet").setAttribute("aria-pressed", String(on));
+  agents.forEach((a) => {
+    if (a.busy || a.reviewing) return;
+    if (on) {
+      a.spot = takeSpot(SPOTS.meeting); a.away = true; a.state = "meeting"; a.status = "Rapat mingguan";
+      goTo(a, a.spot);
+    } else {
+      a.state = "working"; a.status = rnd(a.lines);
+      goSeat(a);
+    }
+  });
+  if (on) { log("Raka memanggil semua tim ke ruang rapat."); mode.meetingTimer = performance.now() + 25000; }
+  else log("Rapat selesai, semua kembali ke meja.");
+  ui();
+}
+function setBreak(on, silent) {
+  mode.break = on;
+  $("btnBreak").setAttribute("aria-pressed", String(on));
+  if (on && mode.meeting) setMeeting(false);
+  agents.forEach((a) => {
+    if (a.busy || a.reviewing) return;
+    if (on) {
+      a.spot = takeSpot(SPOTS.pantry.concat(SPOTS.lounge)); a.away = true; a.state = "break"; a.status = rnd(["Makan siang", "Ngopi dulu", "Ngobrol santai"]);
+      goTo(a, a.spot);
+    } else {
+      a.state = "working"; a.status = rnd(a.lines);
+      goSeat(a);
+    }
+  });
+  if (!silent) log(on ? "Jam istirahat. Antrean tugas tetap jalan." : "Istirahat selesai.");
+  ui();
+}
+
+/* ---------- AI calls ---------- */
+async function connectAI() {
+  try {
+    if (window.claude && typeof window.claude.use === "function") sample = await window.claude.use("sample");
+  } catch (e) { sample = null; }
+  sampleState = sample ? "ready" : "demo";
+  ui();
+}
+function toDemo() { sample = null; sampleState = "demo"; ui(); }
+
+function demoResult(a, title) {
+  return `Draft dari ${a.name} (${a.role}) untuk: "${title}"\n\n` + a.demo.map((d) => "- " + d).join("\n") + "\n\n(Mode demo: aktifkan AI untuk hasil yang ditulis khusus untuk tugas ini.)";
+}
+function routeByKeyword(text) {
+  const t = text.toLowerCase();
+  const map = [
+    ["socmed", ["jadwal posting", "kalender konten", "reels", "tiktok", "feed"]],
+    ["writer", ["caption", "artikel", "blog", "copy", "headline", "konten"]],
+    ["cs", ["balas", "chat", "calon peserta", "tanya", "whatsapp"]],
+    ["proposal", ["proposal", "penawaran", "quotation", "rab"]],
+    ["billing", ["invoice", "tagih", "pembayaran", "cicilan"]],
+    ["curriculum", ["silabus", "modul", "kurikulum", "materi"]],
+    ["analyst", ["analisis", "data", "grafik", "laporan", "omzet"]],
+    ["ads", ["iklan", "ads", "budget", "meta", "google ads"]],
+    ["leads", ["lead", "prospek", "klien baru", "hrd"]],
+    ["scheduler", ["jadwal", "zoom", "absensi", "trainer"]],
+    ["success", ["survei", "testimoni", "alumni", "kepuasan"]]
+  ];
+  for (const [id, keys] of map) if (keys.some((k) => t.includes(k))) return id;
+  return "manager";
+}
+async function autoRoute(text) {
+  if (sample) {
+    try {
+      const roster = agents.map((a) => `${a.id}: ${a.role} (${a.focus})`).join("\n");
+      const r = await sample.json(`Kamu AI Manager di ${COMPANY}. Pilih SATU anggota tim yang paling tepat untuk tugas berikut.\n\nTim:\n${roster}\n\nTugas: "${text}"\n\nBalas hanya JSON: {"id": "<id anggota>", "alasan": "<maks 10 kata>"}`, { modelTier: "quick" });
+      if (r && byId[r.id]) return { id: r.id, why: r.alasan || "" };
+    } catch (e) { if (e && e.code === "not_granted") toDemo(); }
+  }
+  return { id: routeByKeyword(text), why: "" };
+}
+async function produce(a, task) {
+  if (!sample) { await sleep(3500 + Math.random() * 3000); return demoResult(a, task.title); }
+  const prompt = `${persona(a)}\n\nTugas dari owner: "${task.title}"\n\nKerjakan langsung dan berikan hasil akhir yang siap dipakai. Maksimal sekitar 180 kata. Pakai poin bila membantu.`;
+  try {
+    const r = await sample(prompt, { cache: false, onText: ({ text }) => { task.result = clean(text); ui(); } });
+    return clean(r.text);
+  } catch (e) {
+    if (e && e.code === "not_granted") { toDemo(); return demoResult(a, task.title); }
+    if (e && e.text) return clean(e.text);
+    task.failed = true;
+    return e && e.code === "rate_limited" ? "Tim sedang penuh. Coba kirim ulang tugas ini sebentar lagi." : "Tugas gagal diproses. Coba kirim ulang.";
+  }
+}
+async function review(a, task) {
+  if (task.failed) return { verdict: "Perlu revisi", catatan: "Tidak ada hasil untuk direview." };
+  if (!sample) { await sleep(2200); return { verdict: "Disetujui", catatan: "Struktur sudah sesuai. Sesuaikan detail sebelum dikirim. (demo)" }; }
+  try {
+    const r = await sample.json(`Kamu Raka, AI Manager di ${COMPANY}. Review hasil kerja ${a.name} (${a.role}) untuk tugas "${task.title}".\n\nHasil:\n"""${task.result}"""\n\nBalas hanya JSON: {"verdict": "Disetujui" atau "Perlu revisi", "catatan": "<maks 20 kata, bahasa Indonesia>"}`, { modelTier: "quick" });
+    if (r && r.verdict) return { verdict: r.verdict === "Perlu revisi" ? "Perlu revisi" : "Disetujui", catatan: String(r.catatan || "") };
+  } catch (e) { if (e && e.code === "not_granted") toDemo(); }
+  return { verdict: "Disetujui", catatan: "Review otomatis tidak tersedia, cek manual sebelum dikirim." };
+}
+
+/* ---------- Task flow ---------- */
+async function submitTask(text, assignee) {
+  const task = { id: taskSeq++, title: text, agentId: null, status: "queued", result: "", review: null, open: true };
+  tasks.unshift(task);
+  ui();
+  let pick = assignee;
+  if (pick === "auto") {
+    task.routing = true; ui();
+    manager.status = "Membagi tugas baru";
+    const r = await autoRoute(text);
+    pick = r.id; task.routing = false;
+    log(`Raka menugaskan "${short(text, 40)}" ke ${byId[pick].name}${r.why ? " (" + r.why + ")" : ""}.`);
+  } else {
+    log(`Tugas "${short(text, 40)}" dikirim ke ${byId[pick].name}.`);
+  }
+  task.agentId = pick;
+  const a = byId[pick];
+  a.queue.push(task);
+  ui();
+  if (!a.busy) work(a);
+}
+async function work(a) {
+  a.busy = true;
+  while (a.queue.length) {
+    const task = a.queue.shift();
+    a.state = "working"; a.status = "Menuju meja";
+    if (!(a.sitting && a.x === a.seat.x && a.y === a.seat.y)) { a.spot = null; await walkTo(a, a.seat); }
+    a.sitting = true; a.away = false;
+    a.state = "working"; a.status = "Mengerjakan: " + task.title;
+    task.status = "doing"; ui();
+    task.result = await produce(a, task);
+    if (a.id !== "manager") {
+      task.status = "review"; a.status = "Menunggu review Raka"; ui();
+      task.review = await (managerLock = managerLock.then(() => managerReview(a, task)));
+    } else {
+      task.review = { verdict: "Disetujui", catatan: "Dikerjakan langsung oleh AI Manager." };
+    }
+    task.status = "done";
+    a.status = "Selesai: " + task.title;
+    log(`${a.name} menyelesaikan "${short(task.title, 40)}". Review: ${task.review.verdict}.`);
+    ui();
+  }
+  a.busy = false;
+  a.nextIdle = performance.now() + 6000;
+}
+async function managerReview(a, task) {
+  const wasBusy = manager.busy;
+  if (!wasBusy) {
+    manager.reviewing = true; manager.state = "working"; manager.status = "Menuju meja " + a.name;
+    await walkTo(manager, { x: a.seat.x + 0.75, y: a.seat.y + 0.15 });
+  }
+  manager.status = "Review hasil " + a.name; ui();
+  const r = await review(a, task);
+  if (!wasBusy) {
+    manager.status = "Balik ke meja";
+    await walkTo(manager, manager.seat);
+    manager.sitting = true; manager.away = false; manager.reviewing = false;
+    manager.status = rnd(manager.lines);
+  }
+  return r;
+}
+
+/* ---------- Chat ---------- */
+async function sendChat(text) {
+  const a = byId[selectedId];
+  if (!a) return;
+  a.chat.push({ role: "user", content: text });
+  const reply = { role: "assistant", content: "", pending: true };
+  a.chat.push(reply);
+  renderChat();
+  const prevStatus = a.status;
+  if (!a.busy) { a.status = "Lagi chat sama owner"; }
+  ui();
+  if (!sample) {
+    await sleep(900);
+    reply.content = `Halo, saya ${a.name}, ${a.role}. Saat ini saya berjalan di mode demo, jadi belum bisa menjawab spesifik. Aktifkan AI untuk ngobrol sungguhan. Sementara itu, tugas saya sehari-hari: ${a.focus}.`;
+    reply.pending = false; renderChat();
+  } else {
+    const turns = a.chat.filter((m) => !m.pending && m.content).map((m) => ({ role: m.role, content: m.content }));
+    turns[0] = { role: "user", content: persona(a) + "\n\nPesan dari owner:\n" + turns[0].content };
+    try {
+      const r = await sample(turns, { cache: false, onText: ({ text }) => { reply.content = clean(text); reply.pending = false; renderChat(); } });
+      reply.content = clean(r.text);
+    } catch (e) {
+      if (e && e.code === "not_granted") { toDemo(); reply.content = "Akses AI ditolak, chat beralih ke mode demo."; }
+      else reply.content = (e && e.text) ? clean(e.text) : "Pesan gagal terkirim. Coba lagi sebentar lagi.";
+    }
+    reply.pending = false; renderChat();
+  }
+  if (!a.busy && a.status === "Lagi chat sama owner") a.status = prevStatus;
+  ui();
+}
+
+/* ---------- Canvas ---------- */
+const cv = $("cv"), ctx = cv.getContext("2d"), wrap = $("wrap");
+let W = 0, H = 0, DPR = 1, S = 1, OX = 0, OY = 0;
+const C = {};
+const TOKENS = ["bg","surface","ink","muted","line","navy","accent","ok","warn","meet","idle","floor-a","floor-b","floor-meet","floor-pantry","wall-top","wall-l","wall-r","window","desk-top","desk-l","desk-r","chair","screen","glass","glass-edge","label-bg","label-ink","label-sub","shadow","font-body","font-display","font-mono"];
+function readTokens() {
+  const cs = getComputedStyle(document.documentElement);
+  TOKENS.forEach((t) => { C[t] = cs.getPropertyValue("--" + t).trim(); });
+}
+readTokens();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", readTokens);
+new MutationObserver(readTokens).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+function resize() {
+  const r = wrap.getBoundingClientRect();
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  W = Math.max(200, r.width); H = Math.max(200, r.height);
+  cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+  S = Math.min(W / 1270, H / 770);
+  OX = W / 2 - 3 * 32 * S;
+  OY = (H - 740 * S) / 2 + 118 * S;
+}
+new ResizeObserver(resize).observe(wrap);
+resize();
+
+const iso = (x, y, z = 0) => ({ x: OX + (x - y) * 32 * S, y: OY + (x + y) * 16 * S - z * S });
+function poly(pts, fill, stroke) {
+  ctx.beginPath(); ctx.moveTo(pts[0].x, pts[0].y);
+  for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
+}
+function box(x, y, w, d, h, z0, top, left, right) {
+  const p = iso;
+  poly([p(x, y + d, z0), p(x + w, y + d, z0), p(x + w, y + d, z0 + h), p(x, y + d, z0 + h)], left);
+  poly([p(x + w, y, z0), p(x + w, y + d, z0), p(x + w, y + d, z0 + h), p(x + w, y, z0 + h)], right);
+  poly([p(x, y, z0 + h), p(x + w, y, z0 + h), p(x + w, y + d, z0 + h), p(x, y + d, z0 + h)], top);
+}
+function rrect(x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+
+function drawFloor() {
+  for (let gx = 0; gx < 22; gx++) for (let gy = 0; gy < 16; gy++) {
+    let c = (gx + gy) % 2 ? C["floor-a"] : C["floor-b"];
+    if (gx >= 15 && gy >= 1 && gy < 7) c = (gx + gy) % 2 ? C["floor-meet"] : C["floor-a"];
+    if (gx >= 15 && gy >= 9) c = (gx + gy) % 2 ? C["floor-pantry"] : C["floor-b"];
+    poly([iso(gx, gy), iso(gx + 1, gy), iso(gx + 1, gy + 1), iso(gx, gy + 1)], c);
+  }
+  // corridor runner
+  poly([iso(13, 0.2), iso(14, 0.2), iso(14, 16), iso(13, 16)], C["line"]);
+  floorText("AREA KERJA", 2.2, 15.2);
+  floorText("RUANG RAPAT", 15.3, 6.6);
+  floorText("PANTRY & LOUNGE", 15.3, 9.6);
+}
+function floorText(t, x, y) {
+  const o = iso(x, y);
+  ctx.save(); ctx.translate(o.x, o.y);
+  ctx.transform(32 * S / 40, 16 * S / 40, -32 * S / 40, 16 * S / 40, 0, 0);
+  ctx.font = `700 13px ${C["font-body"]}`; ctx.fillStyle = C["muted"]; ctx.globalAlpha = 0.55;
+  ctx.fillText(t, 0, 0);
+  ctx.restore();
+}
+function drawWalls() {
+  box(-0.3, -0.3, 22.3, 0.3, 74, 0, C["wall-top"], C["wall-l"], C["wall-r"]);
+  box(-0.3, 0, 0.3, 16, 74, 0, C["wall-top"], C["wall-l"], C["wall-r"]);
+  // windows on back wall
+  for (const wx of [8.4, 10.6, 12.8, 15.3, 20.2]) {
+    poly([iso(wx, 0, 24), iso(wx + 1.5, 0, 24), iso(wx + 1.5, 0, 60), iso(wx, 0, 60)], C["window"]);
+  }
+  for (const wy of [3, 6.5, 10, 13.2]) {
+    poly([iso(0, wy, 24), iso(0, wy + 1.6, 24), iso(0, wy + 1.6, 60), iso(0, wy, 60)], C["window"]);
+  }
+  // sign
+  const o = iso(1.2, 0, 62);
+  ctx.save(); ctx.translate(o.x, o.y); ctx.transform(1, 0.5, 0, 1, 0, 0);
+  const w = 6.2 * 32 * S, h = 40 * S;
+  rrect(0, 0, w, h, 5 * S); ctx.fillStyle = C["surface"]; ctx.fill();
+  ctx.lineWidth = 2 * S; ctx.strokeStyle = C["accent"]; ctx.stroke();
+  ctx.font = `800 ${21 * S}px ${C["font-display"]}`; ctx.fillStyle = C["navy"];
+  ctx.fillText("Intelligo", 12 * S, 25 * S);
+  const iw = ctx.measureText("Intelligo").width;
+  ctx.fillStyle = C["accent"]; ctx.fillText(" AI Office", 12 * S + iw, 25 * S);
+  ctx.font = `600 ${7.5 * S}px ${C["font-body"]}`; ctx.fillStyle = C["muted"];
+  ctx.fillText("KANTOR AI · BANDUNG", 12 * S, 35 * S);
+  ctx.restore();
+  // TV in meeting room
+  const t = iso(16.9, 0, 58);
+  ctx.save(); ctx.translate(t.x, t.y); ctx.transform(1, 0.5, 0, 1, 0, 0);
+  const tw = 3 * 32 * S, th = 32 * S;
+  ctx.fillStyle = C["navy"]; ctx.fillRect(0, 0, tw, th);
+  ctx.fillStyle = C["surface"]; ctx.font = `600 ${6 * S}px ${C["font-body"]}`; ctx.fillText("PENDAFTARAN / MINGGU", 6 * S, 9 * S);
+  const bars = [0.4, 0.55, 0.5, 0.7, 0.65, 0.85];
+  bars.forEach((b, i) => { ctx.fillStyle = i === bars.length - 1 ? C["accent"] : C["screen"] === C["navy"] ? "rgba(255,255,255,.55)" : C["screen"]; ctx.fillRect(6 * S + i * 14 * S, th - 4 * S - b * 18 * S, 9 * S, b * 18 * S); });
+  ctx.restore();
+}
+
+function objects() {
+  const list = [];
+  agents.forEach((a) => {
+    const x0 = a.cx - 0.7, y0 = a.dy;
+    list.push({ k: a.cx + y0 + 0.8, draw: () => drawDesk(a, x0, y0) });
+    list.push({ k: a.cx + a.seat.y - 0.05, draw: () => box(a.cx - 0.22, a.seat.y - 0.12, 0.44, 0.38, 9, 0, C["chair"], C["chair"], C["chair"]) });
+    list.push({ k: a.x + a.y + 0.01, draw: () => drawAgent(a), agent: a });
+  });
+  // meeting table
+  list.push({ k: 16.6 + 2.8 + 3 + 1, draw: () => box(16.6, 3, 2.8, 2, 15, 0, C["desk-top"], C["desk-l"], C["desk-r"]) });
+  // glass walls
+  const segX = [[1, 2], [2, 3], [3, 3.5], [4.5, 5.5], [5.5, 6.5], [6.5, 7]];
+  segX.forEach(([a, b]) => list.push({ k: 15 + (a + b) / 2, draw: () => glass(iso(15, a), iso(15, b)) }));
+  for (let x = 15; x < 21; x++) list.push({ k: x + 0.5 + 7, draw: () => glass(iso(x, 7), iso(x + 1, 7)) });
+  // pantry
+  list.push({ k: 20.3 + 9.8 + 3, draw: () => { box(20.3, 9.8, 0.7, 3.4, 22, 0, C["desk-top"], C["desk-l"], C["desk-r"]); box(20.45, 10.3, 0.45, 0.5, 15, 22, C["ink"], C["chair"], C["chair"]); box(20.5, 11.8, 0.35, 0.35, 6, 22, C["accent"], C["accent"], C["accent"]); } });
+  list.push({ k: 15.6 + 14.2 + 1, draw: () => { box(15.6, 14.2, 2.4, 0.3, 22, 0, C["navy"], C["navy"], C["navy"]); box(15.6, 13.6, 2.4, 0.8, 10, 0, C["meet"], C["navy"], C["navy"]); } });
+  list.push({ k: 18.2 + 12.6 + 0.8, draw: () => box(18.2, 12.6, 0.8, 0.8, 14, 0, C["desk-top"], C["desk-l"], C["desk-r"]) });
+  // plants
+  [[0.6, 15.2], [12.4, 0.6], [14.4, 0.6], [21.2, 15.2], [14.4, 15.2], [21.2, 8.4], [0.6, 0.6]].forEach(([x, y]) => list.push({ k: x + y + 0.4, draw: () => plant(x, y) }));
+  return list.sort((p, q) => p.k - q.k);
+}
+function glass(a, b) {
+  const h = 52 * S;
+  ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.lineTo(b.x, b.y - h); ctx.lineTo(a.x, a.y - h); ctx.closePath();
+  ctx.fillStyle = C["glass"]; ctx.fill();
+  ctx.strokeStyle = C["glass-edge"]; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(a.x, a.y - h); ctx.lineTo(b.x, b.y - h); ctx.moveTo(a.x, a.y); ctx.lineTo(a.x, a.y - h); ctx.stroke();
+}
+function plant(x, y) {
+  box(x - 0.2, y - 0.2, 0.4, 0.4, 12, 0, C["desk-l"], C["desk-r"], C["desk-r"]);
+  const p = iso(x, y, 24);
+  ctx.fillStyle = "#3f9a5a"; ctx.beginPath(); ctx.arc(p.x, p.y, 11 * S, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = "#5cb874"; ctx.beginPath(); ctx.arc(p.x - 4 * S, p.y - 5 * S, 7 * S, 0, Math.PI * 2); ctx.fill();
+}
+function drawDesk(a, x0, y0) {
+  box(x0, y0, 1.4, 0.8, 18, 0, C["desk-top"], C["desk-l"], C["desk-r"]);
+  // monitor
+  const on = a.sitting && a.state === "working";
+  const m0 = iso(a.cx - 0.35, y0 + 0.18, 20), m1 = iso(a.cx + 0.35, y0 + 0.18, 20);
+  const h = 17 * S;
+  ctx.beginPath(); ctx.moveTo(m0.x, m0.y); ctx.lineTo(m1.x, m1.y); ctx.lineTo(m1.x, m1.y - h); ctx.lineTo(m0.x, m0.y - h); ctx.closePath();
+  ctx.fillStyle = on ? C["screen"] : C["chair"]; ctx.fill();
+  if (on) {
+    ctx.strokeStyle = C["accent"]; ctx.lineWidth = 1.2 * S; ctx.beginPath();
+    for (let i = 0; i < 3; i++) {
+      const t = 0.25 + i * 0.22, len = 0.3 + ((i * 37 + a.cx * 10) % 5) / 10;
+      const pa = { x: m0.x + (m1.x - m0.x) * 0.15, y: m0.y + (m1.y - m0.y) * 0.15 - h * (1 - t) };
+      ctx.moveTo(pa.x, pa.y); ctx.lineTo(pa.x + (m1.x - m0.x) * len, pa.y + (m1.y - m0.y) * len);
+    }
+    ctx.stroke();
+  }
+  // stand + keyboard
+  box(a.cx - 0.05, y0 + 0.2, 0.1, 0.06, 2, 18, C["chair"], C["chair"], C["chair"]);
+  box(a.cx - 0.25, y0 + 0.45, 0.5, 0.15, 1.5, 18, C["line"], C["line"], C["line"]);
+}
+function stateColor(s) { return s === "working" ? C["ok"] : s === "break" ? C["warn"] : s === "meeting" ? C["meet"] : C["idle"]; }
+function drawAgent(a) {
+  const p = iso(a.x, a.y);
+  const walking = a.path.length > 0;
+  const bob = walking ? Math.abs(Math.sin(a.step * 2)) * 2.2 * S : 0;
+  const sit = a.sitting ? 5 * S : 0;
+  const sel = a.id === selectedId || a.id === hoverId;
+  ctx.fillStyle = C["shadow"]; ctx.beginPath(); ctx.ellipse(p.x, p.y, 10 * S, 4.5 * S, 0, 0, Math.PI * 2); ctx.fill();
+  if (sel) { ctx.strokeStyle = C["accent"]; ctx.lineWidth = 2 * S; ctx.beginPath(); ctx.ellipse(p.x, p.y, 14 * S, 6.5 * S, 0, 0, Math.PI * 2); ctx.stroke(); }
+  const base = p.y - bob + sit;
+  if (!a.sitting) {
+    const sw = walking ? Math.sin(a.step * 2) * 2.5 * S : 0;
+    ctx.fillStyle = "#273352";
+    ctx.fillRect(p.x - 5 * S + sw, base - 10 * S, 4 * S, 10 * S);
+    ctx.fillRect(p.x + 1 * S - sw, base - 10 * S, 4 * S, 10 * S);
+  }
+  rrect(p.x - 8 * S, base - 25 * S, 16 * S, 16 * S, 5 * S); ctx.fillStyle = a.color; ctx.fill();
+  ctx.fillStyle = a.skin; ctx.beginPath(); ctx.arc(p.x, base - 31 * S, 6.5 * S, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = a.hair; ctx.beginPath(); ctx.arc(p.x, base - 32.5 * S, 6.8 * S, Math.PI * 1.05, Math.PI * 1.95); ctx.fill();
+  a._hit = { x: p.x, y: base - 20 * S, r: 18 * S };
+  a._head = { x: p.x, y: base - 40 * S };
+}
+function drawLabel(a) {
+  if (!a._head) return;
+  const fs = Math.max(8.5, Math.min(11, 10.5 * S * 1.15));
+  const t1 = a.role, t2 = short(a.status, 24);
+  ctx.font = `700 ${fs}px ${C["font-body"]}`;
+  const w1 = ctx.measureText(t1).width;
+  ctx.font = `500 ${fs - 1}px ${C["font-body"]}`;
+  const w2 = ctx.measureText(t2).width;
+  const pad = 6, w = Math.max(w1 + 14, w2) + pad * 2, h = fs * 2 + 9;
+  const x = a._head.x - w / 2, y = a._head.y - h - 2;
+  ctx.save();
+  ctx.shadowColor = C["shadow"]; ctx.shadowBlur = 6; ctx.shadowOffsetY = 1;
+  rrect(x, y, w, h, 7); ctx.fillStyle = C["label-bg"]; ctx.fill();
+  ctx.restore();
+  if (a.id === selectedId) { rrect(x, y, w, h, 7); ctx.strokeStyle = C["accent"]; ctx.lineWidth = 1.5; ctx.stroke(); }
+  ctx.fillStyle = stateColor(a.state); ctx.beginPath(); ctx.arc(x + pad + 3.5, y + 4 + fs * 0.55, 3.5, 0, Math.PI * 2); ctx.fill();
+  ctx.font = `700 ${fs}px ${C["font-body"]}`; ctx.fillStyle = C["label-ink"]; ctx.fillText(t1, x + pad + 11, y + 3 + fs);
+  ctx.font = `500 ${fs - 1}px ${C["font-body"]}`; ctx.fillStyle = C["label-sub"]; ctx.fillText(t2, x + pad, y + 5 + fs * 2);
+}
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  agents.forEach((a) => {
+    if (a.path.length) {
+      const tgt = a.path[0];
+      const dx = tgt.x - a.x, dy = tgt.y - a.y, dist = Math.hypot(dx, dy);
+      const sp = 2.3 * dt;
+      a.step += dt * 6;
+      if (dist <= sp) { a.x = tgt.x; a.y = tgt.y; a.path.shift(); if (!a.path.length && a.onArrive) { const cb = a.onArrive; a.onArrive = null; cb(); ui(); } }
+      else { a.x += dx / dist * sp; a.y += dy / dist * sp; }
+    }
+    idleTick(a, now);
+  });
+  if (mode.meeting && now > mode.meetingTimer) setMeeting(false);
+
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  ctx.fillStyle = C["surface"]; ctx.fillRect(0, 0, W, H);
+  drawFloor();
+  drawWalls();
+  objects().forEach((o) => o.draw());
+  if (mode.labels) {
+    agents.slice().sort((p, q) => (p.x + p.y) - (q.x + q.y)).forEach(drawLabel);
+  } else if (selectedId) drawLabel(byId[selectedId]);
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+function pickAgent(ev) {
+  const r = cv.getBoundingClientRect();
+  const mx = ev.clientX - r.left, my = ev.clientY - r.top;
+  let best = null, bd = Infinity;
+  agents.forEach((a) => {
+    if (!a._hit) return;
+    const d = Math.hypot(mx - a._hit.x, (my - a._hit.y) * 0.8);
+    if (d < a._hit.r && d < bd) { bd = d; best = a; }
+  });
+  return best;
+}
+cv.addEventListener("mousemove", (e) => { const a = pickAgent(e); hoverId = a ? a.id : null; cv.style.cursor = a ? "pointer" : "default"; });
+cv.addEventListener("mouseleave", () => { hoverId = null; });
+cv.addEventListener("click", (e) => { const a = pickAgent(e); if (a) openChat(a.id); });
+
+/* ---------- UI rendering ---------- */
+let uiQueued = false;
+function ui() { if (uiQueued) return; uiQueued = true; requestAnimationFrame(() => { uiQueued = false; renderAll(); }); }
+const stateText = { working: "Bekerja", break: "Istirahat", meeting: "Rapat", idle: "Santai" };
+let openBoardIds = new Set();
+
+function renderAll() {
+  const count = (s) => agents.filter((a) => a.state === s).length;
+  $("stWork").textContent = count("working");
+  $("stBreak").textContent = count("break");
+  $("stMeet").textContent = count("meeting");
+  $("stDone").textContent = tasks.filter((t) => t.status === "done" && !t.example).length;
+  $("nTasks").textContent = tasks.filter((t) => t.status !== "done").length || "";
+  const mc = $("modeChip");
+  mc.innerHTML = sampleState === "ready" ? '<span class="dot" style="background:var(--ok)"></span>AI aktif'
+    : sampleState === "demo" ? '<span class="dot" style="background:var(--warn)"></span>Mode demo'
+    : '<span class="dot" style="background:var(--idle)"></span>Menyambungkan AI…';
+  mc.title = sampleState === "demo" ? "AI tidak tersedia di tampilan ini. Agen memakai jawaban contoh." : "";
+
+  $("pane-team").innerHTML = agents.map((a) => `
+    <button class="agent-row" type="button" data-agent="${a.id}">
+      <span class="avatar" style="background:${a.color}">${esc(a.name[0])}</span>
+      <span class="who"><b>${esc(a.name)} · ${esc(a.role)}</b><small>${esc(a.status)}</small></span>
+      <span class="state"><span class="dot" style="background:${stateColor(a.state)}"></span>${a.queue.length ? a.queue.length + " antre" : stateText[a.state]}</span>
+    </button>`).join("");
+
+  const cols = [
+    ["Dikerjakan", tasks.filter((t) => t.status === "queued" || t.status === "doing" || t.status === "review")],
+    ["Selesai", tasks.filter((t) => t.status === "done")]
+  ];
+  const board = $("pane-board");
+  const scroll = board.scrollTop;
+  board.innerHTML = cols.map(([name, list]) => `
+    <div class="col-title"><span>${name}</span><span>${list.length}</span></div>
+    ${list.length ? list.map(taskCard).join("") : `<div class="empty">${name === "Dikerjakan" ? "Belum ada tugas berjalan. Kirim tugas dari kotak di atas." : "Belum ada tugas selesai."}</div>`}`).join("");
+  board.scrollTop = scroll;
+
+  $("pane-feed").innerHTML = feed.map((f) => `<div class="feed-item"><time>${f.t}</time><div>${esc(f.text)}</div></div>`).join("");
+
+  if (selectedId) {
+    const a = byId[selectedId];
+    $("chatRole").textContent = a.role + " · " + a.status;
+  }
+}
+function taskCard(t) {
+  const a = t.agentId ? byId[t.agentId] : null;
+  let badge;
+  if (t.status === "queued") badge = `<span class="badge">${t.routing ? "Dibagi" : "Antri"}</span>`;
+  else if (t.status === "doing") badge = `<span class="badge doing">Dikerjakan</span>`;
+  else if (t.status === "review") badge = `<span class="badge review">Review</span>`;
+  else badge = t.review && t.review.verdict === "Perlu revisi" ? `<span class="badge revisi">Revisi</span>` : `<span class="badge done">Selesai</span>`;
+  if (t.example) badge = `<span class="badge example">Contoh</span>` + badge;
+  const open = t.status !== "done" || openBoardIds.has(t.id);
+  const body = t.result
+    ? `<div class="result">${esc(t.result)}</div>`
+    : (t.status === "doing" ? `<div class="result" style="color:var(--muted)">Sedang menulis…</div>` : "");
+  const rev = t.review ? `<div class="review-note"><b>Raka: ${esc(t.review.verdict)}.</b> ${esc(t.review.catatan)}</div>` : "";
+  return `<div class="task">
+    <div class="task-head"><div class="task-title">${esc(t.title)}</div><div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end">${badge}</div></div>
+    <div class="task-meta">${a ? esc(a.name + " · " + a.role) : "Raka sedang memilih penerima"}</div>
+    ${open ? body + rev : ""}
+    <div class="task-actions">
+      ${t.status === "done" ? `<button class="link" type="button" data-toggle="${t.id}">${open ? "Sembunyikan hasil" : "Lihat hasil"}</button>` : ""}
+      ${t.result && t.status === "done" ? `<button class="link" type="button" data-copy="${t.id}">Salin</button>` : ""}
+    </div>
+  </div>`;
+}
+
+function renderChat() {
+  const a = byId[selectedId];
+  if (!a) return;
+  const box = $("msgs");
+  const intro = `<div class="msg sys">${esc(a.name)} siap membantu. Tanyakan apa saja seputar ${esc(a.role.toLowerCase())}.</div>`;
+  box.innerHTML = intro + a.chat.map((m) => `<div class="msg ${m.role === "user" ? "me" : "ai"}">${m.pending ? '<span style="color:var(--muted)">Sedang mengetik…</span>' : esc(m.content)}</div>`).join("");
+  box.scrollTop = box.scrollHeight;
+}
+function openChat(id) {
+  selectedId = id;
+  const a = byId[id];
+  $("chatAvatar").textContent = a.name[0];
+  $("chatAvatar").style.background = a.color;
+  $("chatName").textContent = a.name;
+  $("chatRole").textContent = a.role + " · " + a.status;
+  $("tabsCard").hidden = true;
+  $("chatCard").hidden = false;
+  $("assignee").value = id;
+  renderChat();
+  $("chatInput").focus({ preventScroll: true });
+}
+function closeChat() {
+  selectedId = null;
+  $("chatCard").hidden = true;
+  $("tabsCard").hidden = false;
+}
+
+/* ---------- Wiring ---------- */
+$("assignee").innerHTML = `<option value="auto">Otomatis: Raka yang membagi</option>` + agents.map((a) => `<option value="${a.id}">${esc(a.name)} · ${esc(a.role)}</option>`).join("");
+$("ideas").innerHTML = IDEAS.map((t, i) => `<button class="idea" type="button" data-idea="${i}">${esc(t)}</button>`).join("");
+$("ideas").addEventListener("click", (e) => { const b = e.target.closest("[data-idea]"); if (b) { $("taskText").value = IDEAS[+b.dataset.idea]; $("taskText").focus(); } });
+
+$("taskForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const text = $("taskText").value.trim();
+  if (!text) { $("taskText").focus(); return; }
+  $("taskText").value = "";
+  submitTask(text, $("assignee").value);
+  if (selectedId) closeChat();
+  selectTab("board");
+});
+$("taskText").addEventListener("keydown", (e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) $("taskForm").requestSubmit(); });
+
+function selectTab(name) {
+  ["team", "board", "feed"].forEach((t) => {
+    $("tab-" + t).setAttribute("aria-selected", String(t === name));
+    $("pane-" + t).hidden = t !== name;
+  });
+}
+document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => selectTab(b.dataset.tab)));
+$("pane-team").addEventListener("click", (e) => { const b = e.target.closest("[data-agent]"); if (b) openChat(b.dataset.agent); });
+$("pane-board").addEventListener("click", (e) => {
+  const tg = e.target.closest("[data-toggle]");
+  if (tg) { const id = +tg.dataset.toggle; openBoardIds.has(id) ? openBoardIds.delete(id) : openBoardIds.add(id); renderAll(); return; }
+  const cp = e.target.closest("[data-copy]");
+  if (cp) {
+    const t = tasks.find((x) => x.id === +cp.dataset.copy);
+    const done = () => { cp.textContent = "Tersalin"; setTimeout(() => (cp.textContent = "Salin"), 1500); };
+    try {
+      navigator.clipboard.writeText(t.result).then(done, () => { cp.textContent = "Salin manual"; });
+    } catch (err) { cp.textContent = "Salin manual"; }
+  }
+});
+$("chatBack").addEventListener("click", closeChat);
+$("chatForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const v = $("chatInput").value.trim();
+  if (!v) return;
+  $("chatInput").value = "";
+  sendChat(v);
+});
+$("btnMeet").addEventListener("click", () => setMeeting(!mode.meeting));
+$("btnBreak").addEventListener("click", () => setBreak(!mode.break));
+$("btnLabels").addEventListener("click", () => { mode.labels = !mode.labels; $("btnLabels").setAttribute("aria-pressed", String(mode.labels)); });
+
+function tickClock() { $("clock").textContent = nowHM() + " WIB"; }
+tickClock(); setInterval(tickClock, 15000);
+
+renderAll();
+connectAI();
+})();
+</script>
