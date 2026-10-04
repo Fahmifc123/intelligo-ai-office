@@ -13,3 +13,5 @@ supabase/.temp
 playwright-report
 test-results
 .DS_Store
+.env.production
+supabase/seed.production.sql

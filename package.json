@@ -20,7 +20,8 @@
     "db:seed:gen": "pnpm --filter @intelligo/shared seed:gen",
     "db:test": "supabase test db",
     "n8n:mock": "pnpm --filter @intelligo/worker mock:n8n",
-    "check:bundle": "pnpm --filter @intelligo/web build && pnpm --filter @intelligo/web check:bundle"
+    "check:bundle": "pnpm --filter @intelligo/web build && pnpm --filter @intelligo/web check:bundle",
+    "db:seed:prod": "pnpm --filter @intelligo/shared seed:prod"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

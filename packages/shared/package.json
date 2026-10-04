@@ -13,7 +13,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint .",
     "test": "vitest run",
-    "seed:gen": "tsx scripts/generate-seed.ts"
+    "seed:gen": "tsx scripts/generate-seed.ts",
+    "seed:prod": "tsx scripts/generate-prod-seed.ts"
   },
   "dependencies": {
     "zod": "^4.6.5"
