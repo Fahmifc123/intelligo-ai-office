@@ -1,0 +1,24 @@
+import { WorkerEnv } from '@intelligo/shared';
+import { z } from 'zod';
+
+/** Parses worker env; exits with a readable message instead of a stack trace. */
+export function loadWorkerEnv(source: NodeJS.ProcessEnv = process.env): WorkerEnv {
+  const parsed = WorkerEnv.safeParse(source);
+  if (!parsed.success) {
+    throw new Error(
+      `Env worker tidak valid (lihat .env.example):\n${z.prettifyError(parsed.error)}`,
+    );
+  }
+  return parsed.data;
+}
+
+/** Hides credentials when logging connection strings. */
+export function redactDatabaseUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.password) parsed.password = '****';
+    return parsed.toString();
+  } catch {
+    return '<DATABASE_URL tidak valid>';
+  }
+}

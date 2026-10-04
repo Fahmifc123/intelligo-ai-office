@@ -362,9 +362,8 @@ export const PublicEnv = z.object({
 });
 export type PublicEnv = z.infer<typeof PublicEnv>;
 
+/** Worker talks to Postgres directly (as the service role would), never through PostgREST. */
 export const WorkerEnv = z.object({
-  NEXT_PUBLIC_SUPABASE_URL: z.url(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
   DATABASE_URL: z.string().regex(/^postgres(ql)?:\/\//, 'DATABASE_URL harus URL Postgres'),
   ORG_ID: z.guid(),
   /** Required once the agent runner is active; validated at call time. */
