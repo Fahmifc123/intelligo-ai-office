@@ -22,6 +22,15 @@ describe('loadWorkerEnv', () => {
   });
 });
 
+describe('loadWorkerEnv in production', () => {
+  it('refuses the scripted model', () => {
+    expect(() => loadWorkerEnv({ ...valid, LLM_MODE: 'scripted', NODE_ENV: 'production' })).toThrow(
+      /scripted/,
+    );
+    expect(loadWorkerEnv({ ...valid, LLM_MODE: 'scripted' }).LLM_MODE).toBe('scripted');
+  });
+});
+
 describe('redactDatabaseUrl', () => {
   it('masks the password', () => {
     const redacted = redactDatabaseUrl(valid.DATABASE_URL);

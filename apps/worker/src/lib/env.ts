@@ -9,6 +9,9 @@ export function loadWorkerEnv(source: NodeJS.ProcessEnv = process.env): WorkerEn
       `Env worker tidak valid (lihat .env.example):\n${z.prettifyError(parsed.error)}`,
     );
   }
+  if (parsed.data.LLM_MODE === 'scripted' && source.NODE_ENV === 'production') {
+    throw new Error('LLM_MODE=scripted tidak boleh dipakai di produksi (NODE_ENV=production).');
+  }
   return parsed.data;
 }
 

@@ -1,4 +1,5 @@
 import { createServer, type Server } from 'node:http';
+import { ALERT_AFTER_FAILURES } from './alert';
 import type { Queryable } from './db';
 
 export interface HealthState {
@@ -12,7 +13,10 @@ export function createHealthState(): HealthState {
   return { startedAt: new Date(), consecutiveFailures: new Map(), lastJobAt: null };
 }
 
-/** GET /health: 200 when the database answers, 503 otherwise. */
+/**
+ * GET /health: 200 when the database answers (status `degraded` while a queue is over the alert
+ * threshold, so the platform does not restart-loop on a bad job), 503 otherwise.
+ */
 export function startHealthServer(
   port: number,
   db: Queryable,
@@ -25,16 +29,16 @@ export function startHealthServer(
     }
     db.query('select 1')
       .then(() => {
+        const failing = [...state.consecutiveFailures].filter(([, n]) => n > 0);
+        const degraded = failing.some(([, n]) => n > ALERT_AFTER_FAILURES);
         res.writeHead(200, { 'content-type': 'application/json' });
         res.end(
           JSON.stringify({
-            status: 'ok',
+            status: degraded ? 'degraded' : 'ok',
             service: 'worker',
             uptimeSeconds: Math.round((Date.now() - state.startedAt.getTime()) / 1000),
             lastJobAt: state.lastJobAt?.toISOString() ?? null,
-            failingJobs: Object.fromEntries(
-              [...state.consecutiveFailures].filter(([, n]) => n > 0),
-            ),
+            failingJobs: Object.fromEntries(failing),
           }),
         );
       })

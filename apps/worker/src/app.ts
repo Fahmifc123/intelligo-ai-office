@@ -17,6 +17,7 @@ import { handleReviewTask } from './jobs/review-task';
 import { handleRouteTask } from './jobs/route-task';
 import { handleRunTask } from './jobs/run-task';
 import type { Db } from './lib/db';
+import { createJobFailureTracker } from './lib/alert';
 import type { HealthState } from './lib/health';
 import type { Logger } from './lib/log';
 import type { LlmClient } from './llm/types';
@@ -71,7 +72,9 @@ export async function startWorker(deps: WorkerDeps): Promise<RunningWorker> {
   const recovered = await recoverInterruptedWork(jobDeps, orgId);
   if (recovered > 0) log.info({ recovered }, 'tugas yang terputus diantrekan ulang');
 
-  /** Wraps a handler: validates job data, tracks consecutive failures for the health check. */
+  const failures = createJobFailureTracker({ health, log, webhookUrl: env.ALERT_WEBHOOK_URL });
+
+  /** Wraps a handler: validates job data, tracks consecutive failures (health check, alerts). */
   const work = <T>(
     name: string,
     schema: z.ZodType<T>,
@@ -85,23 +88,11 @@ export async function startWorker(deps: WorkerDeps): Promise<RunningWorker> {
         for (const job of jobs) {
           try {
             await handler(schema.parse(job.data));
-            health.consecutiveFailures.set(name, 0);
-            health.lastJobAt = new Date();
           } catch (error) {
-            const failures = (health.consecutiveFailures.get(name) ?? 0) + 1;
-            health.consecutiveFailures.set(name, failures);
-            const level = failures > 3 ? 'error' : 'warn';
-            log[level](
-              {
-                job: name,
-                jobId: job.id,
-                failures,
-                err: error instanceof Error ? error.message : String(error),
-              },
-              'job gagal',
-            );
+            await failures.failed(name, job.id, error);
             throw error;
           }
+          await failures.succeeded(name);
         }
       },
     );
