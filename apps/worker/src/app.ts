@@ -3,7 +3,7 @@ import type { Job, PgBoss } from 'pg-boss';
 import type { z } from 'zod';
 import { Dispatcher, type DispatchNotification } from './dispatcher';
 import type { JobDeps } from './jobs/deps';
-import { dispatchTask, recoverInterruptedWork, sweepTasks } from './jobs/dispatch';
+import { dispatchTask, recordCancellation, recoverInterruptedWork, sweepTasks } from './jobs/dispatch';
 import { handleReviewTask } from './jobs/review-task';
 import { handleRouteTask } from './jobs/route-task';
 import { handleRunTask } from './jobs/run-task';
@@ -124,8 +124,10 @@ export async function startWorker(deps: WorkerDeps): Promise<RunningWorker> {
           await dispatchTask(jobDeps, notification.id);
           break;
         case 'task_cancelled':
+          await recordCancellation(jobDeps, notification.id);
+          break;
         case 'action':
-          // Running tasks notice cancellation between steps; actions are handled in Fase 5.
+          // Approved / rejected actions are handled by execute-action (Fase 5).
           break;
       }
     },

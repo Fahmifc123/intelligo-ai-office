@@ -81,3 +81,30 @@ export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
   failed: 'Gagal',
   cancelled: 'Dibatalkan',
 };
+
+/** Human labels for tools in the activity feed and task timeline. */
+export const TOOL_LABELS: Record<string, string> = {
+  submit_result: 'menyerahkan hasil',
+  search_knowledge: 'mencari di knowledge base',
+  save_draft: 'menyimpan draft',
+  list_tasks: 'mengecek papan tugas',
+  delegate_task: 'mendelegasikan tugas',
+  read_sheet: 'membaca Google Sheet',
+  score_leads: 'menilai leads',
+  run_analysis: 'menganalisis data',
+  create_google_doc: 'membuat Google Doc',
+  propose_whatsapp_reply: 'mengusulkan balasan WhatsApp',
+  propose_whatsapp_broadcast: 'mengusulkan broadcast WhatsApp',
+  propose_email: 'mengusulkan email',
+  propose_invoice: 'mengusulkan invoice',
+  propose_schedule_post: 'mengusulkan jadwal posting',
+};
+
+/** Rate limit for sending tasks (SPEC Fase 7: 20 per hour per user). */
+export const TASKS_PER_HOUR_LIMIT = 20;
+
+/** First line of the composer text, used as the task title. */
+export function deriveTitle(text: string, max = 120): string {
+  const firstLine = text.trim().split('\n')[0]?.trim() ?? '';
+  return firstLine.length > max ? `${firstLine.slice(0, max - 1).trimEnd()}…` : firstLine;
+}

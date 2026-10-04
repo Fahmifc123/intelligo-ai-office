@@ -87,3 +87,13 @@ export async function recoverInterruptedWork(deps: JobDeps, orgId: string): Prom
   for (const task of reviews.rows) await enqueueReview(deps.boss, task);
   return interrupted;
 }
+
+/** Logs a cancellation from the web app; a running agent stops at its next step. */
+export async function recordCancellation(deps: JobDeps, taskId: string): Promise<void> {
+  await deps.db.query(
+    `insert into public.task_events (org_id, task_id, agent_id, type, payload)
+     select org_id, id, assignee_id, 'note', jsonb_build_object('message', 'Tugas dibatalkan', 'cancelled', true)
+       from public.tasks where id = $1 and status = 'cancelled'`,
+    [taskId],
+  );
+}
