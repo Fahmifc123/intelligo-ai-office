@@ -1,6 +1,11 @@
 import type { ToolName } from '@intelligo/shared';
 import type { LlmTool } from '../llm/types';
 import { listTasks } from './list-tasks';
+import { proposeEmail } from './propose-email';
+import { proposeInvoice } from './propose-invoice';
+import { proposeSchedulePost } from './propose-schedule-post';
+import { proposeWhatsappBroadcast } from './propose-whatsapp-broadcast';
+import { proposeWhatsappReply } from './propose-whatsapp-reply';
 import { register } from './registry';
 import { saveDraft } from './save-draft';
 import { searchKnowledge } from './search-knowledge';
@@ -9,9 +14,17 @@ import type { RegisteredTool } from './types';
 
 /** Every tool the runner can execute, by name. */
 const REGISTRY = new Map<ToolName, RegisteredTool>(
-  [register(submitResult), register(searchKnowledge), register(saveDraft), register(listTasks)].map(
-    (tool) => [tool.name, tool],
-  ),
+  [
+    register(submitResult),
+    register(searchKnowledge),
+    register(saveDraft),
+    register(listTasks),
+    register(proposeWhatsappReply),
+    register(proposeWhatsappBroadcast),
+    register(proposeEmail),
+    register(proposeInvoice),
+    register(proposeSchedulePost),
+  ].map((tool) => [tool.name, tool]),
 );
 
 export function getTool(name: string): RegisteredTool | undefined {

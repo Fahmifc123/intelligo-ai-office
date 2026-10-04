@@ -1,10 +1,14 @@
 import type { TaskRow } from '@intelligo/shared';
+import { autoApproveActions } from './actions';
 import type { JobDeps } from './deps';
 
 /**
- * Follow-ups once a task leaves the worker's hands (done, failed, or waiting for approval):
- * auto-approval of allowed action kinds (Fase 5) and resuming a parent task (Fase 6).
+ * Follow-ups once a task leaves an agent's hands: auto-approval of the action kinds the Owner
+ * allowed (Fase 5). Parent tasks waiting on this one are resumed in Fase 6.
  */
 export async function afterTaskSettled(deps: JobDeps, task: TaskRow): Promise<void> {
-  deps.log.debug({ taskId: task.id, status: task.status }, 'tugas selesai diproses');
+  if (task.status === 'awaiting_approval') {
+    const approved = await autoApproveActions(deps, task.id, task.org_id);
+    if (approved > 0) deps.log.info({ taskId: task.id, approved }, 'aksi disetujui otomatis');
+  }
 }

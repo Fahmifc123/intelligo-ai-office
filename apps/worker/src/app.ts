@@ -3,7 +3,13 @@ import type { Job, PgBoss } from 'pg-boss';
 import type { z } from 'zod';
 import { Dispatcher, type DispatchNotification } from './dispatcher';
 import type { JobDeps } from './jobs/deps';
-import { dispatchTask, recordCancellation, recoverInterruptedWork, sweepTasks } from './jobs/dispatch';
+import { handleActionDecision, handleExecuteAction, sweepActions } from './jobs/actions';
+import {
+  dispatchTask,
+  recordCancellation,
+  recoverInterruptedWork,
+  sweepTasks,
+} from './jobs/dispatch';
 import { handleReviewTask } from './jobs/review-task';
 import { handleRouteTask } from './jobs/route-task';
 import { handleRunTask } from './jobs/run-task';
@@ -13,7 +19,7 @@ import type { Logger } from './lib/log';
 import type { LlmClient } from './llm/types';
 import { applyOfficeMode, runIdleTick } from './office/office';
 import type { OfficeModeName, Rng } from './office/plan';
-import { ensureQueues, QUEUES, RunTaskJob, TaskJob } from './queues';
+import { ActionJob, ensureQueues, QUEUES, RunTaskJob, TaskJob } from './queues';
 
 export const IDLE_TICK_MS = 20_000;
 
@@ -84,6 +90,7 @@ export async function startWorker(deps: WorkerDeps): Promise<RunningWorker> {
   await work(QUEUES.routeTask, TaskJob, (data) => handleRouteTask(jobDeps, data), 4);
   await work(QUEUES.runTask, RunTaskJob, (data) => handleRunTask(jobDeps, data), 12);
   await work(QUEUES.reviewTask, TaskJob, (data) => handleReviewTask(jobDeps, data), 1);
+  await work(QUEUES.executeAction, ActionJob, (data) => handleExecuteAction(jobDeps, data), 4);
 
   let meetingTimer: NodeJS.Timeout | undefined;
   let lastMode: OfficeModeName | null = null;
@@ -127,13 +134,14 @@ export async function startWorker(deps: WorkerDeps): Promise<RunningWorker> {
           await recordCancellation(jobDeps, notification.id);
           break;
         case 'action':
-          // Approved / rejected actions are handled by execute-action (Fase 5).
+          await handleActionDecision(jobDeps, notification.id);
           break;
       }
     },
     sweep: async () => {
       await syncOfficeMode();
       await sweepTasks(jobDeps);
+      await sweepActions(jobDeps);
     },
   });
   await dispatcher.start();

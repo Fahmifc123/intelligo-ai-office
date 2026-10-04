@@ -44,6 +44,7 @@ const between = (text: string, open: string, close: string): string => {
 };
 
 const PRICE = /Rp\s?\d{1,3}(?:[.,]\d{3})+/g;
+const PHONE = /(?:\+62|62|0)8[\d\s-]{8,14}\d/;
 const digits = (s: string): string => s.replace(/\D/g, '');
 
 /** Marker that makes the scripted writer invent a price (Fase 3 acceptance test). */
@@ -232,7 +233,17 @@ export class ScriptedLlm implements LlmClient {
     if (available.has('search_knowledge') && !has('search_knowledge')) {
       return toolUse('search_knowledge', { query: title || instructions.slice(0, 80) });
     }
-    const content = this.compose(title, instructions, toolResults, revisionNotes);
+    // CS replies to a prospect: propose the WhatsApp message (sent only after approval).
+    const phone = instructions.match(PHONE)?.[0];
+    if (phone && available.has('propose_whatsapp_reply') && !has('propose_whatsapp_reply')) {
+      return toolUse('propose_whatsapp_reply', {
+        to: phone,
+        message: this.whatsappReply(toolResults),
+      });
+    }
+    const content = phone
+      ? this.whatsappReply(toolResults)
+      : this.compose(title, instructions, toolResults, revisionNotes);
     if (hooks?.onToolInput) {
       const chunks = 8;
       for (let i = 1; i <= chunks; i++) {
@@ -248,6 +259,21 @@ export class ScriptedLlm implements LlmClient {
       content,
       format: 'markdown',
     });
+  }
+
+  private whatsappReply(facts: string): string {
+    const start = facts.match(/Mulai kelas: ([^\\\n"]+)/)?.[1]?.trim();
+    const schedule = facts.match(/Durasi: ([^\\\n"]+)/)?.[1]?.trim();
+    return [
+      'Halo Kak, terima kasih sudah menghubungi Intelligo ID.',
+      start
+        ? `Bootcamp Data Science Batch 21 mulai ${start}.`
+        : 'Jadwal batch berikutnya: [tanggal].',
+      schedule ? `Durasinya ${schedule}.` : '',
+      'Kalau berkenan, saya kirimkan link pendaftarannya ya: [link-pendaftaran]',
+    ]
+      .filter(Boolean)
+      .join(' ');
   }
 
   private compose(
