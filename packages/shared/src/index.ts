@@ -8,3 +8,4 @@ export * from './pricing';
 export * from './mask';
 export * from './knowledge';
 export * from './tasks';
+export * from './actions';

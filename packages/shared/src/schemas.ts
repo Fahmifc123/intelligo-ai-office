@@ -295,6 +295,10 @@ export const ActionRow = z.object({
   approved_at: NullableTimestamp,
   executed_at: NullableTimestamp,
   response: z.unknown().nullable(),
+  original_payload: z.record(z.string(), z.unknown()).nullable().default(null),
+  rejected_by: z.guid().nullable().default(null),
+  rejected_at: NullableTimestamp.default(null),
+  error: z.string().nullable().default(null),
   created_at: Timestamp,
 });
 export type ActionRow = z.infer<typeof ActionRow>;
