@@ -49,7 +49,7 @@ Prototipe single-file (`reference/intelligo-ai-office.html`) adalah acuan perila
 - [x] Fase 1 — Kantor visual
 - [x] Fase 2 — Tugas dan agent runner
 - [x] Fase 3 — Review Manager
-- [ ] Fase 4 — Chat agen
+- [x] Fase 4 — Chat agen
 - [ ] Fase 5 — Aksi eksternal dan approval
 - [ ] Fase 6 — Delegasi dan integrasi data
 - [ ] Fase 7 — Admin, biaya, hardening
