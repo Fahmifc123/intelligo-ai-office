@@ -99,6 +99,12 @@ export async function cancelTask(taskId: string): Promise<ActionResult> {
       .update({ status: 'rejected' })
       .eq('task_id', id)
       .eq('status', 'proposed');
+    // Delegated subtasks stop with their parent.
+    await admin
+      .from('tasks')
+      .update({ status: 'cancelled', finished_at: new Date().toISOString() })
+      .eq('parent_task_id', id)
+      .in('status', ACTIVE);
     return undefined;
   });
 }
