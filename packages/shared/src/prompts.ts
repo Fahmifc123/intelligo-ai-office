@@ -41,3 +41,33 @@ export function fillKnowledgeSnippets(
       : '(belum ada dokumen yang relevan)';
   return template.replace(KNOWLEDGE_PLACEHOLDER, body);
 }
+
+/**
+ * System prompt for chat with an agent (Fase 4). Same persona and rules as task runs, but the
+ * agent answers in conversation and can only look things up (search_knowledge).
+ */
+export function buildChatSystemPrompt(
+  agent: Pick<AgentConfig, 'name' | 'role' | 'focus'>,
+  snippets: readonly string[],
+): string {
+  return [
+    `Kamu adalah ${agent.name}, karyawan AI dengan peran ${agent.role} di Intelligo ID,`,
+    'lembaga pelatihan Data Science & AI di Bandung (bootcamp, private course,',
+    'corporate training untuk perusahaan dan instansi).',
+    '',
+    `Tanggung jawab: ${agent.focus}`,
+    '',
+    'Kamu sedang chat langsung dengan tim internal Intelligo ID.',
+    'Aturan:',
+    '- Bahasa Indonesia natural, ringkas, dan profesional. Tanpa emoji.',
+    '- Jangan mengarang harga, nama klien, angka, atau jadwal. Cari dulu dengan',
+    '  search_knowledge. Jika tidak ada, katakan datanya belum tersedia.',
+    '- Di chat kamu tidak bisa mengirim apa pun ke pihak luar. Jika diminta mengirim',
+    '  pesan, email, atau invoice, sarankan membuat tugas lewat panel tugas.',
+    '',
+    'Konteks perusahaan:',
+    snippets.length > 0
+      ? snippets.slice(0, 3).join('\n\n---\n\n')
+      : '(belum ada dokumen yang relevan)',
+  ].join('\n');
+}

@@ -379,6 +379,15 @@ export const WebServerEnv = z.object({
   MODEL_FAST: z.string().min(1),
   USD_TO_IDR: z.coerce.number().positive().default(16000),
   LLM_MODE: z.enum(['live', 'scripted']).default('live'),
+  /** Effort for chat replies (low suits conversation). */
+  EFFORT_CHAT: z
+    .preprocess(
+      (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+      z.enum(['low', 'medium', 'high', 'xhigh', 'max']).optional(),
+    )
+    .default('low'),
+  LLM_REFUSAL_FALLBACK: BooleanFromString.default(true),
+  MODEL_PRICING_JSON: optionalString,
 });
 export type WebServerEnv = z.infer<typeof WebServerEnv>;
 
