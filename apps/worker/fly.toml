@@ -1,0 +1,26 @@
+# Fly.io config for the worker. Deploy from the repository root (build context = repo root):
+#   fly deploy . --config apps/worker/fly.toml --dockerfile apps/worker/Dockerfile
+# Exactly one machine: pg-boss singletons and the LISTEN dispatcher assume a single worker.
+app = "intelligo-worker"
+primary_region = "sin"
+
+[env]
+  NODE_ENV = "production"
+  HEALTH_PORT = "8787"
+  LOG_LEVEL = "info"
+  DRY_RUN = "false"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+
+# No public service: the worker only makes outbound connections. The check uses the
+# internal health port.
+[checks]
+  [checks.health]
+    type = "http"
+    port = 8787
+    path = "/health"
+    interval = "30s"
+    timeout = "5s"
+    grace_period = "30s"
