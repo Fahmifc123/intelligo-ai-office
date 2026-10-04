@@ -52,5 +52,5 @@ Prototipe single-file (`reference/intelligo-ai-office.html`) adalah acuan perila
 - [x] Fase 4 — Chat agen
 - [x] Fase 5 — Aksi eksternal dan approval
 - [x] Fase 6 — Delegasi dan integrasi data
-- [ ] Fase 7 — Admin, biaya, hardening
+- [x] Fase 7 — Admin, biaya, hardening
 - [ ] Fase 8 — Deploy
