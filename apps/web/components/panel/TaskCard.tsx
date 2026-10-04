@@ -14,6 +14,7 @@ interface Props {
   review: ReviewRow | undefined;
   role: MemberRole;
   childTasks?: TaskRow[];
+  pendingActions?: number;
   agentsById: Map<string, AgentSummary>;
   onError(message: string): void;
 }
@@ -26,6 +27,7 @@ export function TaskCard({
   review,
   role,
   childTasks = [],
+  pendingActions = 0,
   agentsById,
   onError,
 }: Props) {
@@ -97,6 +99,15 @@ export function TaskCard({
             <span className="text-muted"> · revisi {task.revision_count}x</span>
           ) : null}
         </p>
+      ) : null}
+      {pendingActions > 0 ? (
+        <Link
+          href="/approvals"
+          className="mt-2 block rounded-lg bg-accent-soft px-2.5 py-1.5 text-xs font-semibold text-accent"
+          data-testid="pending-actions"
+        >
+          {pendingActions} aksi menunggu approval Owner
+        </Link>
       ) : null}
       {manualCheck ? (
         <p className="mt-2 text-xs font-semibold text-warn">

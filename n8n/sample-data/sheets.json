@@ -1,0 +1,115 @@
+{
+  "leads": [
+    {
+      "company": "PT Fintek Nusantara",
+      "industry": "fintech",
+      "employees": 320,
+      "contact_role": "Head of Data",
+      "budget_idr": 120000000,
+      "need": "pelatihan machine learning tim data",
+      "last_contact_days": 3,
+      "source": "website"
+    },
+    {
+      "company": "BUMD Air Bersih Kota",
+      "industry": "pemerintah",
+      "employees": 900,
+      "contact_role": "Kabag SDM",
+      "budget_idr": 80000000,
+      "need": "in-house training dashboard",
+      "last_contact_days": 6,
+      "source": "event"
+    },
+    {
+      "company": "Startup Edukasi Kita",
+      "industry": "edtech",
+      "employees": 45,
+      "contact_role": "Founder",
+      "budget_idr": 15000000,
+      "need": "brosur bootcamp",
+      "last_contact_days": 20,
+      "source": "instagram"
+    },
+    {
+      "company": "Pabrik FMCG Sejahtera",
+      "industry": "manufaktur",
+      "employees": 1500,
+      "contact_role": "HR Manager",
+      "budget_idr": 60000000,
+      "need": "pelatihan analisis data produksi",
+      "last_contact_days": 12,
+      "source": "referral"
+    },
+    {
+      "company": "Mahasiswa (salah isi form)",
+      "industry": "individu",
+      "employees": 1,
+      "contact_role": "Mahasiswa",
+      "budget_idr": 0,
+      "need": "info beasiswa",
+      "last_contact_days": 40,
+      "source": "website"
+    },
+    {
+      "company": "PT Logistik Cepat",
+      "industry": "logistik",
+      "employees": 650,
+      "contact_role": "VP Operations",
+      "budget_idr": 150000000,
+      "need": "otomasi n8n dan forecasting",
+      "last_contact_days": 2,
+      "source": "linkedin"
+    }
+  ],
+  "pembayaran": [
+    {
+      "date": "2026-07-05",
+      "program": "Bootcamp Data Science",
+      "customer": "Peserta A",
+      "amount_idr": 3750000,
+      "status": "lunas"
+    },
+    {
+      "date": "2026-07-20",
+      "program": "Private Course",
+      "customer": "Peserta B",
+      "amount_idr": 3600000,
+      "status": "lunas"
+    },
+    {
+      "date": "2026-08-03",
+      "program": "Bootcamp Data Science",
+      "customer": "Peserta C",
+      "amount_idr": 7500000,
+      "status": "lunas"
+    },
+    {
+      "date": "2026-08-18",
+      "program": "Corporate Training",
+      "customer": "PT Contoh",
+      "amount_idr": 45000000,
+      "status": "lunas"
+    },
+    {
+      "date": "2026-09-02",
+      "program": "Bootcamp Data Science",
+      "customer": "Peserta D",
+      "amount_idr": 3750000,
+      "status": "cicilan"
+    },
+    {
+      "date": "2026-09-15",
+      "program": "Private Course",
+      "customer": "Peserta E",
+      "amount_idr": 3600000,
+      "status": "lunas"
+    },
+    {
+      "date": "2026-09-28",
+      "program": "Bootcamp Data Science",
+      "customer": "Peserta F",
+      "amount_idr": 7500000,
+      "status": "jatuh tempo"
+    }
+  ]
+}

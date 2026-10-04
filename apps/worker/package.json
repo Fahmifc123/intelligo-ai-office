@@ -8,7 +8,8 @@
     "start": "tsx --env-file-if-exists=../../.env src/index.ts",
     "typecheck": "tsc -p tsconfig.json",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "mock:n8n": "tsx --env-file-if-exists=../../.env scripts/mock-n8n.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",

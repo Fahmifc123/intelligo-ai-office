@@ -9,6 +9,7 @@ try {
 }
 
 const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
+const E2E_N8N_SECRET = 'e2e-n8n-secret';
 const baseURL = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 
 /**
@@ -32,6 +33,14 @@ export default defineConfig({
   },
   webServer: [
     {
+      command: 'pnpm --filter @intelligo/worker mock:n8n',
+      cwd: resolve(import.meta.dirname, '../..'),
+      env: { N8N_WEBHOOK_SECRET: E2E_N8N_SECRET, MOCK_N8N_PORT: '5679' },
+      url: 'http://127.0.0.1:5679/health',
+      reuseExistingServer: true,
+      timeout: 30_000,
+    },
+    {
       command: 'pnpm --filter @intelligo/worker start',
       cwd: resolve(import.meta.dirname, '../..'),
       env: {
@@ -39,6 +48,10 @@ export default defineConfig({
         LOG_LEVEL: 'warn',
         HEALTH_PORT: '8788',
         IDLE_TICK_ENABLED: 'false',
+        // Real execution path (signed webhooks to the mock); settings.dry_run still decides per test.
+        DRY_RUN: 'false',
+        N8N_BASE_URL: 'http://127.0.0.1:5679/webhook',
+        N8N_WEBHOOK_SECRET: E2E_N8N_SECRET,
       },
       url: 'http://127.0.0.1:8788/health',
       reuseExistingServer: true,

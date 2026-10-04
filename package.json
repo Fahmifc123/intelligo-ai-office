@@ -18,7 +18,8 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:seed:gen": "pnpm --filter @intelligo/shared seed:gen",
-    "db:test": "supabase test db"
+    "db:test": "supabase test db",
+    "n8n:mock": "pnpm --filter @intelligo/worker mock:n8n"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

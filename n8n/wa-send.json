@@ -1,0 +1,93 @@
+{
+  "name": "Intelligo - wa-send (dry-run)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wa-send",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "id": "wa-send-webhook",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "webhookId": "intelligo-wa-send"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Verifies X-Intelligo-Signature (hex HMAC-SHA256 of the raw body).\n// n8n env: N8N_WEBHOOK_SECRET, NODE_FUNCTION_ALLOW_BUILTIN=crypto, N8N_BLOCK_ENV_ACCESS_IN_NODE=false\nconst crypto = require('crypto');\nconst item = $input.first();\nconst raw = Buffer.from(item.binary.data.data, 'base64').toString('utf8');\nconst signature = String(item.json.headers['x-intelligo-signature'] || '');\nconst expected = crypto.createHmac('sha256', $env.N8N_WEBHOOK_SECRET).update(raw, 'utf8').digest('hex');\nconst valid = signature.length === expected.length &&\n  crypto.timingSafeEqual(Buffer.from(signature, 'hex'), Buffer.from(expected, 'hex'));\nif (!valid) {\n  throw new Error('Signature tidak valid');\n}\nreturn [{ json: JSON.parse(raw) }];"
+      },
+      "id": "wa-verify",
+      "name": "Verify signature",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [260, 0]
+    },
+    {
+      "parameters": {
+        "jsCode": "// DRY-RUN: logs instead of sending. Replace this node with your WhatsApp provider\n// (Fonnte, Wablas, or WA Cloud API) when going live.\nconst envelope = $input.first().json;\nconst p = envelope.payload || {};\nconst recipients = p.recipients ? p.recipients : [{ to: p.to, name: p.recipient_name }];\nreturn [{ json: { ok: true, dry_run: true, action_id: envelope.action_id, recipients: recipients.length } }];"
+      },
+      "id": "wa-dry",
+      "name": "Dry-run WhatsApp",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [520, 0]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "wa-respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [780, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Verify signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify signature": {
+      "main": [
+        [
+          {
+            "node": "Dry-run WhatsApp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dry-run WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "pinData": {}
+}

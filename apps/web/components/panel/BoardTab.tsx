@@ -29,6 +29,11 @@ export function BoardTab({
     if (!task.parent_task_id) continue;
     children.set(task.parent_task_id, [...(children.get(task.parent_task_id) ?? []), task]);
   }
+  const pendingActions = new Map<string, number>();
+  for (const action of Object.values(snapshot.actions)) {
+    if (action.status === 'proposed')
+      pendingActions.set(action.task_id, (pendingActions.get(action.task_id) ?? 0) + 1);
+  }
   // Subtasks show under their parent; they appear on their own only if the parent is not loaded.
   const topLevel = tasks.filter((t) => !t.parent_task_id || !snapshot.tasks[t.parent_task_id]);
 
@@ -59,6 +64,7 @@ export function BoardTab({
                     review={snapshot.reviews[task.id]}
                     role={role}
                     childTasks={children.get(task.id)}
+                    pendingActions={pendingActions.get(task.id)}
                     agentsById={agentsById}
                     onError={onError}
                   />
