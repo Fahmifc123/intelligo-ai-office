@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "agentGuidance": false,
   "globalDependencies": [".env"],
   "globalEnv": [
     "NEXT_PUBLIC_SUPABASE_URL",
