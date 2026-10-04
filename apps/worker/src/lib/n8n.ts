@@ -1,5 +1,5 @@
 import { SIGNATURE_HEADER, signBody } from '@intelligo/shared/hmac';
-import type { WorkerEnv } from '@intelligo/shared';
+import type { WorkerEnv } from '@intelligo/shared/env';
 
 export interface N8nResult {
   ok: boolean;

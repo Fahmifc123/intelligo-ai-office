@@ -1,5 +1,5 @@
 import 'server-only';
-import { WebServerEnv } from '@intelligo/shared';
+import { WebServerEnv } from '@intelligo/shared/env';
 import { z } from 'zod';
 
 let cached: WebServerEnv | undefined;

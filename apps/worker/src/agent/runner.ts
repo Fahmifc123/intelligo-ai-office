@@ -3,8 +3,8 @@ import {
   type AgentRow,
   type ModelPrice,
   type TaskRow,
-  type WorkerEnv,
 } from '@intelligo/shared';
+import type { WorkerEnv } from '@intelligo/shared/env';
 import type { Db } from '../lib/db';
 import type { Logger } from '../lib/log';
 import { searchKnowledge } from '../knowledge/search';

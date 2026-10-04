@@ -1,6 +1,6 @@
 import 'server-only';
 import Anthropic from '@anthropic-ai/sdk';
-import type { WebServerEnv } from '@intelligo/shared';
+import type { WebServerEnv } from '@intelligo/shared/env';
 
 export type ChatTurnParam = Anthropic.Beta.Messages.BetaMessageParam;
 export type ChatMessage = Anthropic.Beta.Messages.BetaMessage;

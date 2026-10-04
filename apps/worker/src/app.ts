@@ -1,4 +1,5 @@
-import { parsePricingOverrides, type WorkerEnv } from '@intelligo/shared';
+import { parsePricingOverrides } from '@intelligo/shared';
+import type { WorkerEnv } from '@intelligo/shared/env';
 import type { Job, PgBoss } from 'pg-boss';
 import type { z } from 'zod';
 import { Dispatcher, type DispatchNotification } from './dispatcher';

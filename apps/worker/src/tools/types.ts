@@ -1,4 +1,5 @@
-import type { AgentRow, TaskRow, ToolName, WorkerEnv } from '@intelligo/shared';
+import type { AgentRow, TaskRow, ToolName } from '@intelligo/shared';
+import type { WorkerEnv } from '@intelligo/shared/env';
 import type { z } from 'zod';
 import type { Db } from '../lib/db';
 import type { Logger } from '../lib/log';

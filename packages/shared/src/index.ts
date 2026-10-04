@@ -1,3 +1,6 @@
+// Must run before any schema parses (see zod-config.ts).
+import './zod-config';
+
 export * from './schemas';
 export * from './types';
 export * from './layout';

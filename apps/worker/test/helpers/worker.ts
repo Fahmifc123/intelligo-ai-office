@@ -1,4 +1,4 @@
-import { WorkerEnv } from '@intelligo/shared';
+import { WorkerEnv } from '@intelligo/shared/env';
 import { PgBoss } from 'pg-boss';
 import type { JobDeps } from '../../src/jobs/deps';
 import { createTestLogger } from '../../src/lib/log';

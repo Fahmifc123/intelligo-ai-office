@@ -1,4 +1,4 @@
-import type { WorkerEnv } from '@intelligo/shared';
+import type { WorkerEnv } from '@intelligo/shared/env';
 import { AnthropicLlm } from './anthropic';
 import { ScriptedLlm } from './scripted';
 import { LlmConfigError, type JsonResult, type LlmClient, type LlmMessage } from './types';

@@ -1,4 +1,4 @@
-import type { WorkerEnv } from '@intelligo/shared';
+import type { WorkerEnv } from '@intelligo/shared/env';
 import { z } from 'zod';
 import { ToolError } from '../tools/types';
 import { callN8n, N8nConfigError } from './n8n';

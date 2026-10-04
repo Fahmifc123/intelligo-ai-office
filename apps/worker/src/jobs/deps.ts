@@ -1,4 +1,5 @@
-import type { ModelPrice, WorkerEnv } from '@intelligo/shared';
+import type { ModelPrice } from '@intelligo/shared';
+import type { WorkerEnv } from '@intelligo/shared/env';
 import type { PgBoss } from 'pg-boss';
 import type { Db } from '../lib/db';
 import type { Logger } from '../lib/log';

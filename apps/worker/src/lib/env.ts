@@ -1,4 +1,4 @@
-import { WorkerEnv } from '@intelligo/shared';
+import { WorkerEnv } from '@intelligo/shared/env';
 import { z } from 'zod';
 
 /** Parses worker env; exits with a readable message instead of a stack trace. */

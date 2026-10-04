@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { AgentConfig, AgentStateRow, TaskRow, WorkerEnv } from '../src/schemas';
+import { WorkerEnv } from '../src/env';
+import { AgentConfig, AgentStateRow, TaskRow } from '../src/schemas';
 
 const ORG = '00000000-0000-0000-0000-000000000001';
 
