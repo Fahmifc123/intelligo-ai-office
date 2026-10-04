@@ -60,12 +60,10 @@ test('mengubah activity di DB menggerakkan karakter di dua browser dalam < 1 det
     startedWalking(owner),
     startedWalking(viewer),
   ]);
-  test
-    .info()
-    .annotations.push({
-      type: 'latency',
-      description: `owner ${ownerDelay} ms, viewer ${viewerDelay} ms`,
-    });
+  test.info().annotations.push({
+    type: 'latency',
+    description: `owner ${ownerDelay} ms, viewer ${viewerDelay} ms`,
+  });
   expect(ownerDelay).toBeLessThan(1_000);
   expect(viewerDelay).toBeLessThan(1_000);
 

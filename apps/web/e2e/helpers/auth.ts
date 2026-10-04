@@ -20,8 +20,10 @@ export async function loginAs(page: Page, email: string): Promise<void> {
   };
   const token = body.hashed_token ?? body.properties?.hashed_token;
   if (!token) throw new Error('hashed_token tidak ada di respons generate_link');
-  await page.goto(`/auth/confirm?token_hash=${token}&type=magiclink`);
-  await page.waitForURL((url) => url.pathname === '/');
+  await page.goto(`/auth/confirm?token_hash=${token}&type=magiclink`, {
+    waitUntil: 'domcontentloaded',
+  });
+  await page.waitForURL((url) => url.pathname === '/', { waitUntil: 'domcontentloaded' });
 }
 
 /** Waits until the Pixi scene is mounted and realtime is connected. */

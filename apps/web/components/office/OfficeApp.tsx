@@ -2,7 +2,7 @@
 
 import type { MemberRole } from '@intelligo/shared';
 import { useCallback, useMemo, useState } from 'react';
-import { TeamTab } from '@/components/panel/TeamTab';
+import { OpsPanel, type PanelTab } from '@/components/panel/OpsPanel';
 import { useOfficeRealtime } from '@/lib/office/realtime';
 import { OfficeStore, useOfficeSnapshot } from '@/lib/office/store';
 import type { OfficeSnapshot } from '@/lib/office/types';
@@ -21,6 +21,7 @@ export function OfficeApp({ initial, viewer }: Props) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [labelsVisible, setLabelsVisible] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
+  const [tab, setTab] = useState<PanelTab>('team');
   const select = useCallback(
     (id: string) => setSelectedId((current) => (current === id ? null : id)),
     [],
@@ -63,12 +64,17 @@ export function OfficeApp({ initial, viewer }: Props) {
         </section>
         <aside
           aria-label="Panel operasional"
-          className="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-line bg-surface"
+          className="flex min-h-[520px] flex-col overflow-hidden rounded-2xl border border-line bg-surface lg:min-h-0"
         >
-          <div className="min-h-0 flex-1 overflow-auto p-3">
-            <h2 className="mb-1 font-display text-base font-semibold">Tim</h2>
-            <TeamTab snapshot={snapshot} selectedId={selectedId} onSelect={select} />
-          </div>
+          <OpsPanel
+            snapshot={snapshot}
+            role={viewer.role}
+            selectedId={selectedId}
+            tab={tab}
+            onTab={setTab}
+            onSelect={select}
+            onError={setNotice}
+          />
         </aside>
       </main>
     </div>
