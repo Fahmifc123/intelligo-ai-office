@@ -58,7 +58,8 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      command: 'pnpm dev',
+      // E2E_WEB_COMMAND='pnpm start' runs the suite against a production build (CSP, headers).
+      command: process.env.E2E_WEB_COMMAND ?? 'pnpm dev',
       env: { LLM_MODE: 'scripted' },
       url: `${baseURL}/api/health`,
       reuseExistingServer: true,

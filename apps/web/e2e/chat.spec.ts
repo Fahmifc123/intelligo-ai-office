@@ -2,6 +2,13 @@ import { expect, test } from '@playwright/test';
 import { loginAs, waitForOffice } from './helpers/auth';
 import { closeDb, db, resetOffice } from './helpers/db';
 
+// The web app refuses LLM_MODE=scripted in a production build (by design), so chat runs only
+// against the dev server.
+test.skip(
+  (process.env.E2E_WEB_COMMAND ?? '').includes('start'),
+  'Chat scripted ditolak di build produksi; jalankan dengan dev server.',
+);
+
 test.beforeEach(async () => {
   await resetOffice();
 });
