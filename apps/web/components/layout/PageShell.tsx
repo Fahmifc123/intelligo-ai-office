@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { ROLE_LABELS, type Viewer } from '@/lib/auth';
 
 const NAV = [
@@ -24,13 +25,8 @@ export function PageShell({
   return (
     <div className="mx-auto grid min-h-full max-w-5xl content-start gap-4 px-4 py-3">
       <header className="flex flex-wrap items-center gap-3">
-        <Link href="/" className="flex items-center gap-3">
-          <span className="grid size-[34px] place-items-center rounded-[9px] bg-navy font-display text-lg font-extrabold text-accent">
-            I
-          </span>
-          <span className="font-display text-lg leading-tight font-extrabold text-navy">
-            Intelligo <span className="text-accent">AI Office</span>
-          </span>
+        <Link href="/" aria-label="Intelligo AI Office, ke kantor">
+          <BrandLogo />
         </Link>
         <nav
           className="flex flex-wrap items-center gap-1 text-sm font-semibold"

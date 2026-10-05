@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { getViewer } from '@/lib/auth';
 import { LoginForm } from './LoginForm';
 
@@ -19,16 +20,11 @@ export default async function LoginPage({
   return (
     <main className="grid min-h-full place-items-center px-4 py-10">
       <div className="w-full max-w-sm rounded-2xl border border-line bg-surface p-6">
-        <div className="mb-5 flex items-center gap-3">
-          <span className="grid size-[34px] place-items-center rounded-[9px] bg-navy font-display text-lg font-extrabold text-accent">
-            I
-          </span>
-          <div>
-            <h1 className="font-display text-lg leading-tight font-extrabold text-navy">
-              Intelligo <span className="text-accent">AI Office</span>
-            </h1>
-            <p className="text-xs text-muted">Masuk dengan link yang dikirim ke email Anda.</p>
-          </div>
+        <div className="mb-5 grid gap-3">
+          <h1>
+            <BrandLogo />
+          </h1>
+          <p className="text-xs text-muted">Masuk dengan link yang dikirim ke email Anda.</p>
         </div>
         <LoginForm error={error ? ERRORS[error] : undefined} />
       </div>

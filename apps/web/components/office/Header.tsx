@@ -4,6 +4,7 @@ import type { MemberRole } from '@intelligo/shared';
 import Link from 'next/link';
 import { useTransition } from 'react';
 import { setBreakMode, startMeeting } from '@/app/actions/office';
+import { BrandLogo } from '@/components/brand/BrandLogo';
 import { formatIdr, formatTimeWib, formatUsd } from '@/lib/format';
 import { startOfTodayWib } from '@/lib/office/snapshot';
 import { useNow } from '@/lib/use-now';
@@ -75,18 +76,8 @@ export function Header({
 
   return (
     <header className="flex flex-wrap items-center gap-x-3 gap-y-2">
-      <Link href="/" className="flex items-center gap-3">
-        <span className="grid size-[34px] place-items-center rounded-[9px] bg-navy font-display text-lg font-extrabold text-accent">
-          I
-        </span>
-        <span>
-          <span className="block font-display text-lg leading-tight font-extrabold text-navy">
-            Intelligo <span className="text-accent">AI Office</span>
-          </span>
-          <span className="block text-[11px] font-semibold tracking-wide text-muted">
-            KANTOR AI · BANDUNG
-          </span>
-        </span>
+      <Link href="/" aria-label="Intelligo AI Office, ke kantor">
+        <BrandLogo tagline="KANTOR AI · BANDUNG" />
       </Link>
 
       <div className="flex flex-wrap items-center gap-1.5" aria-label="Ringkasan kantor">
