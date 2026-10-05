@@ -120,18 +120,6 @@ export function Header({
             {pendingApprovals}
           </span>
         </Link>
-        <Link
-          href="/agents"
-          className="rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold"
-        >
-          Agen
-        </Link>
-        <Link
-          href="/settings"
-          className="rounded-full border border-line bg-surface px-2.5 py-1 text-xs font-semibold"
-        >
-          Pengaturan
-        </Link>
       </div>
 
       <div className="ml-auto flex flex-wrap items-center gap-1.5">
