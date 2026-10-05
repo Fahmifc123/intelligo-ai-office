@@ -1,12 +1,14 @@
 'use client';
 
 import type { MemberRole } from '@intelligo/shared';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { ChatPanel } from '@/components/panel/ChatPanel';
 import { OpsPanel, type PanelTab } from '@/components/panel/OpsPanel';
-import { useOfficeRealtime } from '@/lib/office/realtime';
+import { Avatar } from '@/components/ui/Avatar';
+import { useDemoFeed } from '@/lib/office/demo-feed';
+import { useOfficeRealtime, type RealtimeStatus } from '@/lib/office/realtime';
 import { OfficeStore, useOfficeSnapshot } from '@/lib/office/store';
-import type { OfficeSnapshot } from '@/lib/office/types';
+import type { AgentSummary, OfficeSnapshot } from '@/lib/office/types';
 import { Header } from './Header';
 import { OfficeCanvas } from './OfficeCanvas';
 
@@ -15,9 +17,64 @@ interface Props {
   viewer: { email: string; role: MemberRole };
 }
 
+/** The live office: Supabase Realtime feeds the store. */
 export function OfficeApp({ initial, viewer }: Props) {
   const store = useMemo(() => new OfficeStore(initial), [initial]);
   const realtime = useOfficeRealtime(store);
+  return (
+    <OfficeView
+      store={store}
+      realtime={realtime}
+      viewer={viewer}
+      renderChat={(agent) => <ChatPanel key={agent.id} agent={agent} role={viewer.role} />}
+    />
+  );
+}
+
+const PREVIEW_VIEWER = { email: 'pratinjau', role: 'viewer' } as const;
+
+/** Preview mode (no database): demo data, simulated office life, everything read-only. */
+export function PreviewOfficeApp({ initial }: { initial: OfficeSnapshot }) {
+  const store = useMemo(() => new OfficeStore(initial), [initial]);
+  const realtime = useDemoFeed(store);
+  return (
+    <OfficeView
+      store={store}
+      realtime={realtime}
+      viewer={PREVIEW_VIEWER}
+      banner="Mode pratinjau: database belum terhubung. Data di bawah adalah contoh; kirim tugas, chat, dan approval aktif setelah Supabase disambungkan."
+      renderChat={(agent) => <PreviewChat agent={agent} />}
+    />
+  );
+}
+
+function PreviewChat({ agent }: { agent: AgentSummary }) {
+  return (
+    <div className="grid content-start gap-3 p-4 text-sm" data-testid="chat-panel">
+      <div className="flex items-center gap-3">
+        <Avatar name={agent.name} color={agent.appearance.shirt} />
+        <div>
+          <p className="font-semibold">{agent.name}</p>
+          <p className="text-xs text-muted">{agent.role}</p>
+        </div>
+      </div>
+      <p className="text-muted">{agent.focus}</p>
+      <p className="rounded-xl bg-surface-2 px-3 py-2 text-muted">
+        Chat dengan {agent.name} aktif setelah database dan API key terhubung.
+      </p>
+    </div>
+  );
+}
+
+interface ViewProps {
+  store: OfficeStore;
+  realtime: RealtimeStatus;
+  viewer: { email: string; role: MemberRole };
+  banner?: string;
+  renderChat: (agent: AgentSummary) => ReactNode;
+}
+
+function OfficeView({ store, realtime, viewer, banner, renderChat }: ViewProps) {
   const snapshot = useOfficeSnapshot(store);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [labelsVisible, setLabelsVisible] = useState(true);
@@ -41,6 +98,14 @@ export function OfficeApp({ initial, viewer }: Props) {
         onToggleLabels={() => setLabelsVisible((v) => !v)}
         onError={setNotice}
       />
+      {banner ? (
+        <p
+          data-testid="preview-banner"
+          className="rounded-xl border border-line bg-surface px-3 py-2 text-sm text-muted"
+        >
+          {banner}
+        </p>
+      ) : null}
       {notice ? (
         <div
           role="alert"
@@ -77,11 +142,7 @@ export function OfficeApp({ initial, viewer }: Props) {
             onTab={setTab}
             onSelect={select}
             onError={setNotice}
-            chat={
-              selectedAgent ? (
-                <ChatPanel key={selectedAgent.id} agent={selectedAgent} role={viewer.role} />
-              ) : undefined
-            }
+            chat={selectedAgent ? renderChat(selectedAgent) : undefined}
           />
         </aside>
       </main>

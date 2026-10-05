@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { isPreviewMode, isPreviewPath } from './lib/preview';
 
 const PUBLIC_PATHS = ['/login', '/auth/', '/api/health'];
 
@@ -8,7 +9,7 @@ export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anonKey) return response;
+  if (!url || !anonKey || isPreviewMode()) return previewResponse(request, response);
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
@@ -34,6 +35,22 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(login);
   }
   return response;
+}
+
+/** Preview mode (no Supabase): only the demo office and the health check are served. */
+function previewResponse(request: NextRequest, next: NextResponse): NextResponse {
+  const path = request.nextUrl.pathname;
+  if (isPreviewPath(path)) return next;
+  if (path.startsWith('/api/')) {
+    return NextResponse.json(
+      { error: 'Mode pratinjau: database belum terhubung.' },
+      { status: 503 },
+    );
+  }
+  const home = request.nextUrl.clone();
+  home.pathname = '/';
+  home.search = '';
+  return NextResponse.redirect(home);
 }
 
 export const config = {
