@@ -17,8 +17,8 @@ select is(
 );
 
 -- Seed
-select is((select count(*)::int from public.agents), 12, 'seed has 12 agents');
-select is((select count(*)::int from public.agent_states), 12, 'seed has 12 agent states');
+select is((select count(*)::int from public.agents), 13, 'seed has 13 agents');
+select is((select count(*)::int from public.agent_states), 13, 'seed has 13 agent states');
 select is(
   (select count(*)::int from public.agents where is_manager),
   1,
@@ -75,8 +75,8 @@ reset role;
 -- authenticated user of the seeded org
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"bbbbbbbb-0000-4000-8000-000000000001","role":"authenticated","app_metadata":{"org_id":"00000000-0000-0000-0000-000000000001"}}';
-select is((select count(*)::int from public.agents), 12, 'member reads own org agents');
-select is((select count(*)::int from public.agent_states), 12, 'member reads own org agent states');
+select is((select count(*)::int from public.agents), 13, 'member reads own org agents');
+select is((select count(*)::int from public.agent_states), 13, 'member reads own org agent states');
 select is((select count(*)::int from public.tasks), 1, 'member only reads own org tasks');
 select lives_ok(
   $$update public.agent_states set activity = 'break' where agent_id = 'cs'$$,
