@@ -4,7 +4,7 @@ import { findDesk, officeLayout } from '../src/layout';
 import { TOOL_NAMES } from '../src/schemas';
 
 describe('agentsConfig', () => {
-  it('defines the 12 agents from the spec', () => {
+  it('defines the 12 agents from the spec plus the designer (Fase 9)', () => {
     expect(agentsConfig.map((a) => a.id)).toEqual([
       'manager',
       'cs',
@@ -18,6 +18,7 @@ describe('agentsConfig', () => {
       'ads',
       'scheduler',
       'success',
+      'designer',
     ]);
   });
 

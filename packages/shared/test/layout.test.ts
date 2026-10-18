@@ -13,10 +13,10 @@ describe('officeLayout', () => {
     expect(officeLayout.grid).toEqual({ w: 22, h: 16 });
   });
 
-  it('has 12 desks with unique ids', () => {
+  it('has 13 desks with unique ids', () => {
     const ids = officeLayout.desks.map((d) => d.id);
-    expect(ids).toHaveLength(12);
-    expect(new Set(ids).size).toBe(12);
+    expect(ids).toHaveLength(13);
+    expect(new Set(ids).size).toBe(13);
   });
 
   it('keeps every seat and spot inside the grid', () => {

@@ -72,12 +72,36 @@ export const SchedulePostPayload = z.object({
   media_url: z.url().optional(),
 });
 
+/** Instagram carousel limits: 2 to 10 slides. */
+export const CAROUSEL_MIN_SLIDES = 2;
+export const CAROUSEL_MAX_SLIDES = 10;
+
+export const CarouselSlide = z.object({
+  position: z.number().int().min(1).max(CAROUSEL_MAX_SLIDES),
+  headline: z.string().min(1).max(120),
+  body: z.string().max(300).default(''),
+  url: z.url(),
+});
+export type CarouselSlide = z.infer<typeof CarouselSlide>;
+
+/**
+ * Human review of a generated carousel (internal: approving it sends nothing anywhere).
+ * The reviewer can edit the caption before approving.
+ */
+export const DesignReviewPayload = z.object({
+  title: z.string().min(1).max(160),
+  caption: z.string().max(2200).default(''),
+  planned_at: z.string().max(60).optional(),
+  slides: z.array(CarouselSlide).min(CAROUSEL_MIN_SLIDES).max(CAROUSEL_MAX_SLIDES),
+});
+
 export const ACTION_PAYLOADS = {
   send_whatsapp: WhatsappPayload,
   send_whatsapp_bulk: WhatsappBroadcastPayload,
   send_email: EmailPayload,
   create_invoice: InvoicePayload,
   schedule_post: SchedulePostPayload,
+  design_review: DesignReviewPayload,
 } as const satisfies Record<ActionKind, z.ZodType>;
 
 export function parseActionPayload(
@@ -98,8 +122,11 @@ export function invoiceTotal(items: readonly { quantity: number; unit_price: num
   return items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
 }
 
-/** n8n webhook path per action kind (SPEC section 11). */
-export const N8N_WORKFLOWS: Record<ActionKind, string> = {
+/** Kinds handled inside the app: approving them records the decision, nothing is sent. */
+export const INTERNAL_ACTION_KINDS: readonly ActionKind[] = ['design_review'];
+
+/** n8n webhook path per external action kind (SPEC section 11). */
+export const N8N_WORKFLOWS: Record<Exclude<ActionKind, 'design_review'>, string> = {
   send_whatsapp: 'wa-send',
   send_whatsapp_bulk: 'wa-send',
   send_email: 'email-send',
@@ -113,6 +140,7 @@ export const ACTION_KIND_LABELS: Record<ActionKind, string> = {
   send_email: 'Email',
   create_invoice: 'Invoice',
   schedule_post: 'Jadwal posting',
+  design_review: 'Review desain carousel',
 };
 
 /** Kinds the Owner may allow without manual approval (never broadcasts). */

@@ -56,13 +56,14 @@ export const ActionKind = z.enum([
   'send_email',
   'create_invoice',
   'schedule_post',
+  'design_review',
 ]);
 export type ActionKind = z.infer<typeof ActionKind>;
 
 export const ReviewVerdict = z.enum(['approved', 'revise']);
 export type ReviewVerdict = z.infer<typeof ReviewVerdict>;
 
-export const LlmPurpose = z.enum(['route', 'run', 'review', 'chat']);
+export const LlmPurpose = z.enum(['route', 'run', 'review', 'chat', 'image']);
 export type LlmPurpose = z.infer<typeof LlmPurpose>;
 
 export const ChatRole = z.enum(['user', 'assistant']);
@@ -83,6 +84,7 @@ export const TOOL_NAMES = [
   'propose_email',
   'propose_invoice',
   'propose_schedule_post',
+  'generate_carousel',
 ] as const;
 export const ToolName = z.enum(TOOL_NAMES);
 export type ToolName = z.infer<typeof ToolName>;
@@ -124,6 +126,8 @@ export const AgentConfig = z.object({
   tools: z.array(ToolName),
   idleLines: z.array(z.string().min(1)).min(2),
   appearance: Appearance,
+  /** Role-specific working steps appended to the system prompt (e.g. the carousel flow). */
+  playbook: z.array(z.string().min(1)).default([]),
 });
 export type AgentConfig = z.infer<typeof AgentConfig>;
 
@@ -348,6 +352,8 @@ export const SettingsRow = z.object({
   usd_to_idr: NumericLike,
   meeting_until: NullableTimestamp,
   break_mode: z.boolean(),
+  /** Visual style for generated posters (colors, tone, logo usage); empty = default guide. */
+  brand_guide: z.string().default(''),
   created_at: Timestamp,
   updated_at: Timestamp,
 });

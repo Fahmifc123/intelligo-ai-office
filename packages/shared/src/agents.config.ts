@@ -16,6 +16,13 @@ const agentInputs: AgentConfigInput[] = [
     isManager: true,
     tools: withCore(['delegate_task', 'search_knowledge', 'list_tasks']),
     idleLines: ['Cek hasil sebelum dikirim', 'Prioritaskan antrean tugas', 'Pantau KPI mingguan'],
+    playbook: [
+      'Konten carousel Instagram dikerjakan berurutan dengan tiga subtugas, masing-masing setelah subtugas sebelumnya selesai:',
+      '1) socmed (Laras): rencana carousel berisi tujuan, audiens, jumlah slide (3 sampai 7), pesan tiap slide, dan jadwal tayang (ISO 8601 dengan +07:00).',
+      '2) writer (Dimas): caption Instagram dan teks tiap slide (judul pendek dan satu kalimat isi) berdasarkan rencana Laras. Sertakan rencana Laras di instruksi.',
+      '3) designer (Rani): desain slide dengan generate_carousel. Sertakan teks slide, caption, dan jadwal dari subtugas sebelumnya di instruksi. Carousel tidak diposting; hasilnya masuk antrean review manusia.',
+      'Setelah ketiganya selesai, serahkan ringkasan: jadwal tayang yang direncanakan, caption, dan status review desain.',
+    ],
     appearance: { shirt: '#1f3a6b', hair: '#1b1b1f', skin: '#e8b48c' },
   },
   {
@@ -38,6 +45,9 @@ const agentInputs: AgentConfigInput[] = [
     name: 'Dimas',
     role: 'Content Writer',
     focus: 'Menulis caption, artikel, dan copy pemasaran yang persuasif.',
+    playbook: [
+      'Untuk carousel Instagram tulis dengan format: "Caption:" lalu caption (maks 2200 karakter), lalu "Slide 1:", "Slide 2:", dan seterusnya, masing-masing berisi Judul (maks 8 kata) dan Isi (maks 20 kata). Angka dan harga hanya dari search_knowledge.',
+    ],
     deskId: 'd-1-0',
     tools: withCore(['search_knowledge', 'save_draft']),
     idleLines: ['Draft artikel blog', 'Tulis headline landing page', 'Riset topik konten'],
@@ -50,6 +60,9 @@ const agentInputs: AgentConfigInput[] = [
     focus: 'Menyusun kalender konten dan strategi media sosial.',
     deskId: 'd-2-0',
     tools: withCore(['save_draft', 'propose_schedule_post']),
+    playbook: [
+      'Untuk rencana carousel Instagram: tulis tujuan, audiens, jumlah slide (3 sampai 7), pesan inti tiap slide, CTA di slide terakhir, dan jadwal tayang ISO 8601 dengan +07:00. Jangan usulkan posting; carousel direview manusia dulu.',
+    ],
     idleLines: ['Jadwalkan 14 posting', 'Balas komentar Instagram', 'Cek insight Reels'],
     appearance: { shirt: '#c2417a', hair: '#3b2416', skin: '#f2c8a5' },
   },
@@ -133,9 +146,24 @@ const agentInputs: AgentConfigInput[] = [
     idleLines: ['Survei kepuasan alumni', 'Kumpulkan testimoni', 'Tawarkan kelas lanjutan'],
     appearance: { shirt: '#c28a12', hair: '#20130c', skin: '#eebf98' },
   },
+  {
+    id: 'designer',
+    name: 'Rani',
+    role: 'Desainer Grafis',
+    focus: 'Mendesain slide carousel dan poster media sosial sesuai brand Intelligo.',
+    deskId: 'd-2-3',
+    tools: withCore(['search_knowledge', 'generate_carousel']),
+    idleLines: ['Rapikan aset brand', 'Sketsa layout carousel', 'Pilih palet warna'],
+    appearance: { shirt: '#0e7490', hair: '#2a1a12', skin: '#e9b995' },
+    playbook: [
+      'Panggil generate_carousel satu kali dengan semua slide (urut), memakai teks persis seperti dari copywriter. Tulis visual tiap slide dalam bahasa Inggris singkat.',
+      'Carousel tidak diposting. Setelah gambar jadi, hasilnya otomatis masuk antrean review manusia (Fahmi) di halaman Approval.',
+      'Akhiri dengan submit_result berisi daftar slide (judul dan link gambar), caption, dan jadwal yang direncanakan.',
+    ],
+  },
 ];
 
-/** The 12 AI agents of Intelligo AI Office, validated at import time. */
+/** The 13 AI agents of Intelligo AI Office, validated at import time. */
 export const agentsConfig: readonly AgentConfig[] = agentInputs.map((input) =>
   AgentConfig.parse(input),
 );

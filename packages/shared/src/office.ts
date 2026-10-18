@@ -71,3 +71,15 @@ export function estimateWalkMs(
   const ms = (distance * 1.4 * 1000) / WALK_TILES_PER_SECOND + 400;
   return Math.round(Math.min(9_000, Math.max(1_200, ms)));
 }
+
+/**
+ * Default visual style for generated carousels, based on the Intelligo.id logo. The Owner can
+ * replace it in /settings (settings.brand_guide).
+ */
+export const DEFAULT_BRAND_GUIDE = [
+  'Brand Intelligo.id: lembaga pelatihan Data Science & AI di Bandung.',
+  'Warna utama navy #023047 dan oranye #FF5400, latar putih atau navy gelap.',
+  'Gaya modern, bersih, profesional: banyak ruang kosong, ilustrasi flat atau foto suasana belajar, ikon data (grafik, kode, laptop).',
+  'Teks tebal sans-serif, judul besar, maksimal dua baris; tidak ada teks lain selain yang diminta.',
+  'Konsisten antar slide: layout, warna, dan tipografi sama; slide pertama paling mencolok.',
+].join('\n');

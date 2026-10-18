@@ -70,6 +70,20 @@ export const WorkerEnv = z.object({
     (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
     z.url().optional(),
   ),
+  /** Carousel images (Fase 9): OpenAI Images API. Required only when the designer runs. */
+  OPENAI_API_KEY: optionalString,
+  /** Image model id, e.g. gpt-image-1 (never hardcoded). */
+  MODEL_IMAGE: optionalString,
+  IMAGE_SIZE: z.enum(['1024x1024', '1024x1536', '1536x1024']).default('1024x1024'),
+  IMAGE_QUALITY: z.enum(['low', 'medium', 'high']).default('medium'),
+  /** Estimated price per generated image, for the cost pages. */
+  IMAGE_COST_USD: z.coerce.number().nonnegative().default(0.04),
+  /** Supabase Storage for generated images (bucket `posters`); same values as the web app. */
+  NEXT_PUBLIC_SUPABASE_URL: z.preprocess(
+    (v) => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+    z.url().optional(),
+  ),
+  SUPABASE_SERVICE_ROLE_KEY: optionalString,
   /** Port for the health check endpoint (Fase 8). */
   HEALTH_PORT: z.coerce.number().int().positive().default(8787),
 });

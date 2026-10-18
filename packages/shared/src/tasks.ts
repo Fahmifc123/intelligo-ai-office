@@ -98,6 +98,7 @@ export const TOOL_LABELS: Record<string, string> = {
   propose_email: 'mengusulkan email',
   propose_invoice: 'mengusulkan invoice',
   propose_schedule_post: 'mengusulkan jadwal posting',
+  generate_carousel: 'mendesain slide carousel',
 };
 
 /** Rate limit for sending tasks (SPEC Fase 7: 20 per hour per user). */

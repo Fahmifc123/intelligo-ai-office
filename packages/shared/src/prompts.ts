@@ -5,8 +5,9 @@ export const KNOWLEDGE_PLACEHOLDER = '{knowledge_snippets}';
 
 /** Renders the system prompt template from SPEC section 8 for one agent. */
 export function buildSystemPromptTemplate(
-  agent: Pick<AgentConfig, 'name' | 'role' | 'focus'>,
+  agent: Pick<AgentConfig, 'name' | 'role' | 'focus'> & { playbook?: readonly string[] },
 ): string {
+  const playbook = agent.playbook ?? [];
   return [
     `Kamu adalah ${agent.name}, karyawan AI dengan peran ${agent.role} di Intelligo ID,`,
     'lembaga pelatihan Data Science & AI di Bandung (bootcamp, private course,',
@@ -23,6 +24,7 @@ export function buildSystemPromptTemplate(
     '- Jika tugas di luar peranmu, gunakan delegate_task (hanya Manager) atau',
     '  jelaskan di hasil bahwa tugas sebaiknya dialihkan.',
     '- Akhiri dengan memanggil tool submit_result.',
+    ...(playbook.length > 0 ? ['', 'Cara kerja khusus:', ...playbook.map((s) => `- ${s}`)] : []),
     '',
     'Konteks perusahaan:',
     KNOWLEDGE_PLACEHOLDER,
