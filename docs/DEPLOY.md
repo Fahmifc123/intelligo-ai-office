@@ -69,6 +69,9 @@ Jalankan tepat satu instance. Antrean `run-task` memakai singleton per agen dan 
 | `N8N_BASE_URL`                                              | Mis. `https://n8n.intelligo.id/webhook`                                                          |
 | `N8N_WEBHOOK_SECRET`                                        | Secret acak panjang, sama dengan di n8n                                                          |
 | `DRY_RUN`                                                   | `false` (Owner masih bisa menyalakan dry-run dari Pengaturan; seed memulai dengan dry-run aktif) |
+| `NEXT_PUBLIC_SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY`    | Sama dengan web; worker mengunggah gambar carousel ke Storage bucket `posters`                   |
+| `OPENAI_API_KEY` / `MODEL_IMAGE`                            | Key OpenAI dan model gambar (mis. `gpt-image-1`) untuk Rani (desain carousel)                    |
+| `IMAGE_QUALITY`, `IMAGE_SIZE`, `IMAGE_COST_USD`             | Opsional: `medium`, `1024x1024`, estimasi biaya per gambar                                       |
 | `ALERT_WEBHOOK_URL`                                         | Opsional: incoming webhook Slack atau Discord                                                    |
 | `LOG_LEVEL`                                                 | `info`                                                                                           |
 | `USD_TO_IDR`, `MAX_STEPS`, `EFFORT_WORK`, `TASK_TIMEOUT_MS` | Opsional, default sesuai `.env.example`                                                          |

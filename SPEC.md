@@ -577,6 +577,14 @@ Setiap fase diakhiri: semua test lulus, `pnpm typecheck` dan `pnpm lint` bersih,
 - Health check worker, log terstruktur (pino), alert sederhana jika job gagal > 3 kali berturut.
 - **AC**: produksi berjalan, satu tugas end-to-end berhasil dari domain publik.
 
+### Fase 9 — Konten carousel Instagram (tambahan setelah Fase 8)
+
+- Agen baru Rani (Desainer Grafis, meja `d-2-3`) dengan tool `generate_carousel`. Gambar dibuat dengan OpenAI Images API (`OPENAI_API_KEY`, `MODEL_IMAGE` dari env), disimpan di Supabase Storage bucket publik `posters`, dicatat di tabel `media_assets`, biayanya di `llm_usage` (purpose `image`).
+- Alur lewat Manager (Raka): Laras menyusun rencana, Dimas menulis caption dan teks slide, Rani mendesain. Raka mereview teks dan gambar slide (Claude membaca gambar; teks di gambar harus sama persis dengan teks slide).
+- Tidak ada posting otomatis. Carousel masuk antrean review manusia sebagai aksi internal `design_review` di /approvals (Owner). Menyetujui hanya mencatat keputusan; tidak ada panggilan ke n8n atau Instagram.
+- Gaya visual dari Pengaturan (`settings.brand_guide`); kosong berarti panduan bawaan dari logo Intelligo.id (navy #023047, oranye #FF5400).
+- **AC**: tugas "Buat carousel Instagram ..." menghasilkan 2 sampai 10 slide yang tampil di /approvals; menyetujui menyelesaikan tugas tanpa aksi eksternal.
+
 Total estimasi: 10–13 hari kerja dengan Claude Code.
 
 ## 14. Keamanan dan biaya
@@ -608,6 +616,12 @@ N8N_WEBHOOK_SECRET=
 DRY_RUN=true
 USD_TO_IDR=16000
 MAX_STEPS=8
+# worker, desain carousel (Fase 9)
+OPENAI_API_KEY=
+MODEL_IMAGE=gpt-image-1
+IMAGE_SIZE=1024x1024
+IMAGE_QUALITY=medium
+IMAGE_COST_USD=0.04
 ```
 
 ## 16. Testing
