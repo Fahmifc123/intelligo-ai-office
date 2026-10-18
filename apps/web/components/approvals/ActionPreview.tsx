@@ -1,4 +1,5 @@
 import {
+  DesignReviewPayload,
   EmailPayload,
   InvoicePayload,
   invoiceTotal,
@@ -7,6 +8,7 @@ import {
   WhatsappPayload,
   type ActionKind,
 } from '@intelligo/shared';
+import Image from 'next/image';
 import { formatDateTimeWib, formatIdr } from '@/lib/format';
 
 const displayPhone = (phone: string): string =>
@@ -143,5 +145,54 @@ export function ActionPreview({ kind, payload }: { kind: ActionKind; payload: un
         </div>
       );
     }
+    case 'design_review': {
+      const p = DesignReviewPayload.safeParse(payload);
+      if (!p.success) return <Invalid payload={payload} />;
+      return <CarouselPreview {...p.data} />;
+    }
   }
+}
+
+/** Instagram-style carousel strip: swipe or scroll through the slides in order. */
+export function CarouselPreview({
+  slides,
+  caption,
+  planned_at,
+}: {
+  slides: readonly { position: number; headline: string; url: string }[];
+  caption?: string;
+  planned_at?: string;
+}) {
+  return (
+    <div className="grid gap-2" data-testid="carousel-preview">
+      <p className="text-xs text-muted">
+        Carousel Instagram · {slides.length} slide · tidak diposting otomatis
+        {planned_at ? ` · rencana tayang ${planned_at}` : ''}
+      </p>
+      <ol className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1">
+        {[...slides]
+          .sort((a, b) => a.position - b.position)
+          .map((slide) => (
+            <li key={slide.position} className="w-56 shrink-0 snap-start">
+              <a href={slide.url} target="_blank" rel="noreferrer">
+                <Image
+                  src={slide.url}
+                  alt={`Slide ${slide.position}: ${slide.headline}`}
+                  width={1024}
+                  height={1024}
+                  unoptimized
+                  className="aspect-square w-full rounded-xl border border-line object-cover"
+                />
+              </a>
+              <p className="mt-1 text-xs text-muted">
+                {slide.position}. {slide.headline}
+              </p>
+            </li>
+          ))}
+      </ol>
+      {caption ? (
+        <p className="rounded-xl border border-line p-3 text-sm whitespace-pre-wrap">{caption}</p>
+      ) : null}
+    </div>
+  );
 }

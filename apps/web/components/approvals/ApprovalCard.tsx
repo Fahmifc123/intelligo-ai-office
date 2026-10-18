@@ -1,6 +1,11 @@
 'use client';
 
-import { ACTION_KIND_LABELS, type ActionRow, type MemberRole } from '@intelligo/shared';
+import {
+  ACTION_KIND_LABELS,
+  INTERNAL_ACTION_KINDS,
+  type ActionRow,
+  type MemberRole,
+} from '@intelligo/shared';
 import Link from 'next/link';
 import { useState, useTransition } from 'react';
 import { approveAction, rejectAction } from '@/app/actions/approvals';
@@ -15,6 +20,14 @@ const STATUS_LABELS: Record<ActionRow['status'], string> = {
   executed: 'Terkirim',
   failed: 'Gagal',
 };
+
+/** Internal kinds (design review) are approved, not sent. */
+function statusLabel(action: ActionRow): string {
+  if (INTERNAL_ACTION_KINDS.includes(action.kind)) {
+    if (action.status === 'approved' || action.status === 'executed') return 'Disetujui';
+  }
+  return STATUS_LABELS[action.status];
+}
 
 /** Simple kinds get field editors; structured ones (invoice, broadcast) get a JSON editor. */
 const FIELD_EDITORS: Partial<
@@ -34,6 +47,7 @@ const FIELD_EDITORS: Partial<
     { key: 'scheduled_at', label: 'Waktu tayang (ISO 8601)' },
     { key: 'caption', label: 'Caption', multiline: true },
   ],
+  design_review: [{ key: 'caption', label: 'Caption', multiline: true }],
 };
 
 interface Props {
@@ -113,7 +127,7 @@ export function ApprovalCard({ action, task, agent, role }: Props) {
           className="rounded-full bg-surface-2 px-2 py-0.5 text-[11px] font-semibold"
           data-testid="approval-status"
         >
-          {STATUS_LABELS[action.status]}
+          {statusLabel(action)}
         </span>
       </header>
 

@@ -12,7 +12,7 @@ import { notFound } from 'next/navigation';
 import { z } from 'zod';
 import { LiveRefresh } from '@/components/admin/LiveRefresh';
 import { TaskTimeline } from '@/components/admin/TaskTimeline';
-import { ActionPreview } from '@/components/approvals/ActionPreview';
+import { ActionPreview, CarouselPreview } from '@/components/approvals/ActionPreview';
 import { PageShell } from '@/components/layout/PageShell';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { requireViewer } from '@/lib/auth';
@@ -28,6 +28,13 @@ const list = <T,>(schema: z.ZodType<T>, rows: unknown): T[] =>
   });
 
 const Num = z.union([z.number(), z.string()]).pipe(z.coerce.number());
+const Slide = z.object({
+  version: z.number().int(),
+  position: z.number().int(),
+  headline: z.string(),
+  url: z.string(),
+});
+
 const TaskUsage = z.object({ cost_usd: Num, input_tokens: Num, output_tokens: Num, calls: Num });
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -49,7 +56,7 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
   if (!parsedTask.success) notFound();
   const task = parsedTask.data;
 
-  const [events, reviews, actions, usage, children, agents, settings] = await Promise.all([
+  const [events, reviews, actions, usage, children, agents, settings, media] = await Promise.all([
     supabase.from('task_events').select('*').eq('task_id', id).order('id'),
     supabase.from('reviews').select('*').eq('task_id', id).order('created_at'),
     supabase.from('actions').select('*').eq('task_id', id).order('created_at'),
@@ -61,7 +68,16 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
     supabase.from('tasks').select('*').eq('parent_task_id', id).order('created_at'),
     supabase.from('agents').select('id, name, role'),
     supabase.from('settings').select('*').maybeSingle(),
+    supabase
+      .from('media_assets')
+      .select('version, position, headline, url')
+      .eq('task_id', id)
+      .order('position'),
   ]);
+  // Latest carousel version only (earlier ones were replaced by a revision).
+  const allSlides = list(Slide, media.data);
+  const latest = Math.max(-1, ...allSlides.map((s) => s.version));
+  const slides = allSlides.filter((s) => s.version === latest);
   const names = Object.fromEntries((agents.data ?? []).map((a) => [String(a.id), String(a.name)]));
   const rate = SettingsRow.safeParse(settings.data).data?.usd_to_idr ?? 16000;
   const cost = TaskUsage.safeParse(usage.data).data;
@@ -129,6 +145,12 @@ export default async function TaskPage({ params }: { params: Promise<{ id: strin
           </ul>
         ) : null}
       </Section>
+
+      {slides.length > 0 ? (
+        <Section title="Desain carousel">
+          <CarouselPreview slides={slides} />
+        </Section>
+      ) : null}
 
       {subtasks.length > 0 ? (
         <Section title="Subtugas">

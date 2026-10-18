@@ -110,14 +110,14 @@ describe('assignSpots', () => {
     expect(spots.get('writer')).toMatchObject({ point: [4.8, 3.25], seated: true });
   });
 
-  it('gives 11 meeting agents 11 different meeting seats', () => {
+  it('gives every agent except one a different meeting seat', () => {
     const ids = agentsConfig.map((a) => a.id).filter((id) => id !== 'writer');
     const spots = assignSpots(
       officeLayout,
       ids.map((id) => request(id, 'meeting', 'meeting')),
     );
     const keys = new Set([...spots.values()].map((s) => s.key));
-    expect(keys.size).toBe(11);
+    expect(keys.size).toBe(ids.length);
     for (const s of spots.values()) expect(s.key.startsWith('meeting:')).toBe(true);
   });
 

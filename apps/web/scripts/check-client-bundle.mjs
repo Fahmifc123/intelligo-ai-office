@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path';
 const SECRETS = [
   'SUPABASE_SERVICE_ROLE_KEY',
   'ANTHROPIC_API_KEY',
+  'OPENAI_API_KEY',
   'N8N_WEBHOOK_SECRET',
   'DATABASE_URL',
 ];

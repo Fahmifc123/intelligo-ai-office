@@ -54,6 +54,8 @@ export function describeEvent(
       return `${str(p.actor_email) || 'Owner'} ${label} aksi ${str(p.kind)} untuk ${title}.`;
     }
     case 'executed':
+      if (p.internal === true)
+        return `Desain ${title} disetujui reviewer. Tidak ada yang diposting.`;
       return p.dry_run === true
         ? `Aksi ${str(p.kind)} untuk ${title} dijalankan dalam mode dry-run (tidak terkirim).`
         : `Aksi ${str(p.kind)} untuk ${title} berhasil dieksekusi.`;

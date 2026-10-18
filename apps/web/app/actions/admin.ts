@@ -105,6 +105,7 @@ const SettingsUpdate = z.object({
   auto_approve_kinds: z.array(z.enum(AUTO_APPROVABLE_KINDS as [string, ...string[]])),
   dry_run: z.boolean(),
   usd_to_idr: z.number().min(1000).max(100_000),
+  brand_guide: z.string().trim().max(4000, 'Panduan brand maksimal 4000 karakter.'),
 });
 
 export async function updateSettings(input: z.input<typeof SettingsUpdate>): Promise<ActionResult> {

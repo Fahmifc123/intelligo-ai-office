@@ -3,6 +3,7 @@
 import {
   ACTION_KIND_LABELS,
   AUTO_APPROVABLE_KINDS,
+  DEFAULT_BRAND_GUIDE,
   type ActionKind,
   type MemberRole,
 } from '@intelligo/shared';
@@ -11,13 +12,19 @@ import { updateSettings } from '@/app/actions/admin';
 
 interface Props {
   role: MemberRole;
-  initial: { dry_run: boolean; auto_approve_kinds: ActionKind[]; usd_to_idr: number };
+  initial: {
+    dry_run: boolean;
+    auto_approve_kinds: ActionKind[];
+    usd_to_idr: number;
+    brand_guide: string;
+  };
 }
 
 export function SettingsForm({ role, initial }: Props) {
   const [dryRun, setDryRun] = useState(initial.dry_run);
   const [kinds, setKinds] = useState<Set<ActionKind>>(new Set(initial.auto_approve_kinds));
   const [rate, setRate] = useState(String(initial.usd_to_idr));
+  const [brandGuide, setBrandGuide] = useState(initial.brand_guide);
   const [message, setMessage] = useState<{ ok: boolean; text: string } | null>(null);
   const [pending, startTransition] = useTransition();
   const isOwner = role === 'owner';
@@ -29,6 +36,7 @@ export function SettingsForm({ role, initial }: Props) {
         dry_run: dryRun,
         auto_approve_kinds: [...kinds],
         usd_to_idr: Number(rate),
+        brand_guide: brandGuide,
       });
       setMessage(
         result.ok ? { ok: true, text: 'Pengaturan tersimpan.' } : { ok: false, text: result.error },
@@ -80,6 +88,21 @@ export function SettingsForm({ role, initial }: Props) {
           ))}
         </div>
       </div>
+      <label className="grid gap-1 text-sm font-semibold">
+        Panduan brand untuk desain carousel
+        <span className="text-xs font-normal text-muted">
+          Warna, gaya visual, dan aturan teks yang dipakai Rani saat membuat slide. Kosongkan untuk
+          memakai panduan bawaan dari logo Intelligo.id.
+        </span>
+        <textarea
+          rows={6}
+          value={brandGuide}
+          onChange={(e) => setBrandGuide(e.target.value)}
+          placeholder={DEFAULT_BRAND_GUIDE}
+          className="rounded-lg border border-line bg-surface-2 px-2 py-1.5 text-xs font-normal"
+          aria-label="Panduan brand"
+        />
+      </label>
       <label className="grid gap-1 text-sm font-semibold">
         Kurs USD ke IDR (untuk tampilan biaya)
         <input

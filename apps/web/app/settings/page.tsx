@@ -35,6 +35,7 @@ export default async function SettingsPage() {
             dry_run: settings?.dry_run ?? true,
             auto_approve_kinds: settings?.auto_approve_kinds ?? [],
             usd_to_idr: settings?.usd_to_idr ?? 16000,
+            brand_guide: settings?.brand_guide ?? '',
           }}
         />
       </Section>
