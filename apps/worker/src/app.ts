@@ -20,7 +20,9 @@ import type { Db } from './lib/db';
 import { createJobFailureTracker } from './lib/alert';
 import type { HealthState } from './lib/health';
 import type { Logger } from './lib/log';
+import { createImageClient, type ImageClient } from './llm/image';
 import type { LlmClient } from './llm/types';
+import { createMediaStore, type MediaStore } from './media/store';
 import { applyOfficeMode, runIdleTick } from './office/office';
 import type { OfficeModeName, Rng } from './office/plan';
 import { ActionJob, ensureQueues, QUEUES, RunTaskJob, TaskJob } from './queues';
@@ -40,6 +42,9 @@ export interface WorkerDeps {
   log: Logger;
   rng: Rng;
   llm: LlmClient;
+  /** Defaults from env (OpenAI Images / Supabase Storage, or scripted). */
+  images?: ImageClient;
+  media?: MediaStore;
   health: HealthState;
   sleep?: (ms: number) => Promise<void>;
 }
@@ -59,6 +64,8 @@ export async function startWorker(deps: WorkerDeps): Promise<RunningWorker> {
     db,
     boss,
     llm: deps.llm,
+    images: deps.images ?? createImageClient(env),
+    media: deps.media ?? createMediaStore(env),
     env,
     log,
     prices: parsePricingOverrides(env.MODEL_PRICING_JSON),

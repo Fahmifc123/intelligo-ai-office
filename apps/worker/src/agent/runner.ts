@@ -7,6 +7,8 @@ import {
 import type { WorkerEnv } from '@intelligo/shared/env';
 import type { Db } from '../lib/db';
 import type { Logger } from '../lib/log';
+import type { ImageClient } from '../llm/image';
+import type { MediaStore } from '../media/store';
 import { searchKnowledge } from '../knowledge/search';
 import { recordUsage } from '../llm/usage';
 import type {
@@ -32,6 +34,8 @@ import {
 export interface RunnerDeps {
   db: Db;
   llm: LlmClient;
+  images: ImageClient;
+  media: MediaStore;
   env: WorkerEnv;
   log: Logger;
   prices: Readonly<Record<string, ModelPrice>>;
@@ -136,7 +140,16 @@ export async function runAgentLoop(
         },
       ];
   const firstStep = options.resume?.steps ?? 0;
-  const context: ToolContext = { db, env, log, orgId: task.org_id, task, agent };
+  const context: ToolContext = {
+    db,
+    env,
+    log,
+    orgId: task.org_id,
+    task,
+    agent,
+    images: deps.images,
+    media: deps.media,
+  };
   const partial = new PartialWriter(db, task.id);
 
   try {

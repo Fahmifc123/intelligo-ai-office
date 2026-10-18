@@ -161,6 +161,20 @@ export interface ReviewInput {
   result: string;
   proposedActions: readonly { kind: string; payload: unknown }[];
   knowledge: readonly string[];
+  /** Carousel slides attached as images, in order (Fase 9). */
+  slides?: readonly { position: number; headline: string; body: string }[];
+}
+
+/** Extra rubric when slide images are attached: the rendered text must match exactly. */
+function slideRubric(slides: ReviewInput['slides']): string[] {
+  if (!slides || slides.length === 0) return [];
+  return [
+    `5. Ada ${slides.length} gambar slide terlampir, urut. Teks di tiap gambar harus sama persis dengan teks slide berikut (tanpa salah ketik, huruf hilang, atau angka berbeda), terbaca jelas, dan gaya antar slide konsisten:`,
+    '<slides>',
+    ...slides.map((s) => `Slide ${s.position}: ${s.headline}${s.body ? ` | ${s.body}` : ''}`),
+    '</slides>',
+    '   Sebut nomor slide yang harus diperbaiki di notes.',
+  ];
 }
 
 export function buildReviewPrompt(input: ReviewInput): string {
@@ -196,7 +210,8 @@ export function buildReviewPrompt(input: ReviewInput): string {
     '2. Sesuai peran dan menjawab tugas.',
     '3. Bahasa Indonesia natural dan profesional, nada sesuai audiens.',
     '4. Aksi eksternal masuk akal dan alamat penerima (nomor/email) valid.',
-    'Jika ada pelanggaran rubrik 1 atau 4, verdict wajib "revise".',
+    ...slideRubric(input.slides),
+    'Jika ada pelanggaran rubrik 1, 4, atau 5, verdict wajib "revise".',
     '',
     'Balas JSON: {"verdict": "approved" | "revise", "notes": "<maks 40 kata, sebut yang harus diperbaiki>", "scores": {"accuracy": 1-5, "tone": 1-5, "completeness": 1-5}}',
   ].join('\n');

@@ -17,6 +17,8 @@ import { LlmConfigError } from './types';
  */
 
 const ROUTES: readonly [string, readonly string[]][] = [
+  // Multi-step content (plan, copy, design) is coordinated by the manager (Fase 9).
+  ['manager', ['carousel']],
   ['socmed', ['jadwal posting', 'kalender konten', 'reels', 'tiktok', 'feed']],
   ['writer', ['caption', 'artikel', 'blog', 'copy', 'headline', 'konten']],
   ['cs', ['balas', 'chat', 'calon peserta', 'tanya', 'whatsapp']],
@@ -120,6 +122,87 @@ function calledTools(messages: readonly LlmMessageParam[]): CalledTool[] {
     }
   }
   return calls;
+}
+
+/** The manager's three carousel subtasks, in order (agents.config.ts manager playbook). */
+const CAROUSEL_STEPS: readonly { agent: string; title: string; instructions: string }[] = [
+  {
+    agent: 'socmed',
+    title: 'Rencana carousel',
+    instructions: 'Buat rencana carousel Instagram: tujuan, slide, dan jadwal tayang.',
+  },
+  {
+    agent: 'writer',
+    title: 'Caption dan teks slide',
+    instructions: 'Tulis caption dan teks slide carousel sesuai rencana.',
+  },
+  {
+    agent: 'designer',
+    title: 'Desain carousel',
+    instructions: 'Desain slide carousel dari teks berikut dengan generate_carousel.',
+  },
+];
+
+/** Body of the most recent <subtask> block in the conversation. */
+function lastSubtaskResult(text: string): string {
+  const blocks = [...text.matchAll(/<subtask [^>]*>\n([\s\S]*?)\n<\/subtask>/g)];
+  return blocks.at(-1)?.[1]?.trim() ?? '';
+}
+
+const PLANNED_AT = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?\+07:00/;
+
+function carouselPlan(): string {
+  return [
+    'Rencana carousel Instagram',
+    'Tujuan: mengajak calon peserta mendaftar Bootcamp Data Science Batch 21.',
+    'Audiens: fresh graduate dan profesional yang ingin pindah karier ke data.',
+    'Jumlah slide: 3',
+    'Slide 1: hook pindah karier ke data',
+    'Slide 2: belajar dengan mentor praktisi dan project nyata',
+    'Slide 3: harga, tanggal mulai, dan ajakan daftar',
+    'Jadwal tayang: 2026-10-24T19:00:00+07:00',
+  ].join('\n');
+}
+
+function carouselCopy(facts: string): string {
+  const price = facts.match(PRICE)?.[0] ?? '[harga]';
+  const start = facts.match(/Mulai kelas: ([^\\\n"]+)/)?.[1]?.trim() ?? '[tanggal]';
+  return [
+    `Caption: Mau pindah karier ke data? Bootcamp Data Science Batch 21 mulai ${start}. Investasi ${price}. Daftar sekarang, kuota terbatas.`,
+    '',
+    'Slide 1:',
+    'Judul: Pindah Karier ke Data',
+    'Isi: Mulai dari nol bersama Intelligo.id',
+    '',
+    'Slide 2:',
+    'Judul: Belajar dari Praktisi',
+    'Isi: Project nyata dan portofolio siap kerja',
+    '',
+    'Slide 3:',
+    `Judul: Mulai ${start}`,
+    `Isi: Investasi ${price}. Daftar sekarang`,
+    '',
+    'Jadwal tayang: 2026-10-24T19:00:00+07:00',
+  ].join('\n');
+}
+
+/** generate_carousel input parsed from the copywriter's text ("Slide N:" / "Judul:" / "Isi:"). */
+function carouselInput(title: string, text: string): Record<string, unknown> {
+  const slides = [...text.matchAll(/Slide \d+:\s*\nJudul: ([^\n]+)\nIsi: ([^\n]*)/g)].map((m) => ({
+    headline: (m[1] ?? '').trim(),
+    body: (m[2] ?? '').trim(),
+    visual: 'flat illustration of a data science classroom, navy and orange palette',
+  }));
+  const fallback = [
+    { headline: 'Pindah Karier ke Data', body: '', visual: 'laptop with charts, navy background' },
+    { headline: 'Daftar Sekarang', body: '', visual: 'orange call to action badge' },
+  ];
+  return {
+    title: title || 'Carousel Instagram',
+    caption: text.match(/Caption: ([^\n]+)/)?.[1]?.trim() ?? '',
+    ...(text.match(PLANNED_AT) ? { planned_at: text.match(PLANNED_AT)?.[0] } : {}),
+    slides: slides.length >= 2 ? slides.slice(0, 10) : fallback,
+  };
 }
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
@@ -244,6 +327,24 @@ export class ScriptedLlm implements LlmClient {
     const lower = instructions.toLowerCase();
     const allText = request.messages.map(textOf).join('\n');
 
+    // Manager: carousel = plan (Laras), copy (Dimas), design (Rani), then report (Fase 9).
+    if (available.has('delegate_task') && lower.includes('carousel')) {
+      const delegated = called.filter((c) => c.name === 'delegate_task').length;
+      const step = CAROUSEL_STEPS[delegated];
+      if (step) {
+        const previous = lastSubtaskResult(allText);
+        return toolUse('delegate_task', {
+          agent_id: step.agent,
+          title: `${step.title}: ${title}`,
+          instructions: `${step.instructions} Tugas: ${instructions}${previous ? `\n\nHasil sebelumnya:\n${previous}` : ''}`,
+        });
+      }
+    }
+    // Designer: render the slides written by the copywriter.
+    if (available.has('generate_carousel') && !has('generate_carousel')) {
+      return toolUse('generate_carousel', carouselInput(title, instructions));
+    }
+
     // Manager: delegate lead scoring, then the proposal, then report (Fase 6).
     if (available.has('delegate_task') && /lead|penawaran/.test(lower)) {
       const delegated = called.filter((c) => c.name === 'delegate_task').length;
@@ -282,13 +383,25 @@ export class ScriptedLlm implements LlmClient {
 
     const docUrl = allText.match(/https:\/\/docs\.google\.com\/document\/d\/[\w-]+\/edit/)?.[0];
     const leadsTableText = toolResults.match(/"table":"((?:[^"\\]|\\.)*)"/)?.[1];
+    const slideUrls = [...toolResults.matchAll(/"url":"([^"]+)"/g)].map((m) => m[1]);
     const content = phone
       ? this.whatsappReply(toolResults)
-      : docUrl
-        ? `Penawaran untuk lead panas sudah disiapkan.\n\nGoogle Doc: ${docUrl}`
-        : leadsTableText
-          ? (JSON.parse(`"${leadsTableText}"`) as string)
-          : this.compose(title, instructions, toolResults, revisionNotes);
+      : has('generate_carousel')
+        ? [
+            `Carousel "${title}" selesai, menunggu review manusia (tidak diposting).`,
+            ...slideUrls.map((url, i) => `Slide ${i + 1}: ${url}`),
+          ].join('\n')
+        : available.has('delegate_task') && lower.includes('carousel')
+          ? 'Rencana, copy, dan desain carousel selesai. Desain menunggu review Fahmi di halaman Approval; tidak ada yang diposting.'
+          : lower.includes('teks slide')
+            ? carouselCopy(toolResults)
+            : lower.includes('rencana carousel')
+              ? carouselPlan()
+              : docUrl
+                ? `Penawaran untuk lead panas sudah disiapkan.\n\nGoogle Doc: ${docUrl}`
+                : leadsTableText
+                  ? (JSON.parse(`"${leadsTableText}"`) as string)
+                  : this.compose(title, instructions, toolResults, revisionNotes);
     if (hooks?.onToolInput) {
       const chunks = 8;
       for (let i = 1; i <= chunks; i++) {

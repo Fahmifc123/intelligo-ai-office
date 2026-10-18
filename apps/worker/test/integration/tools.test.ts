@@ -8,9 +8,12 @@ import { startMockN8nServer, type MockN8nServer } from '../../scripts/mock-n8n-s
 import { createTestDatabase, TEST_ORG_ID, type TestDatabase } from '../helpers/db';
 import { hasTestDatabase } from '../helpers/env';
 import { insertTask, testEnv } from '../helpers/worker';
+import { ScriptedImageClient } from '../../src/llm/image';
+import { MemoryMediaStore } from '../../src/media/store';
 
 describe.skipIf(!hasTestDatabase)('data and delegation tools (database, mock n8n)', () => {
   let t: TestDatabase;
+  const media = new MemoryMediaStore();
   let n8n: MockN8nServer;
 
   beforeAll(async () => {
@@ -37,7 +40,16 @@ describe.skipIf(!hasTestDatabase)('data and delegation tools (database, mock n8n
     const task = await loadTask(t.db, taskId);
     const agent = await loadAgent(t.db, agentId);
     if (!task || !agent) throw new Error('setup gagal');
-    return { db: t.db, env, log: createTestLogger(), orgId: TEST_ORG_ID, task, agent };
+    return {
+      db: t.db,
+      env,
+      log: createTestLogger(),
+      orgId: TEST_ORG_ID,
+      task,
+      agent,
+      images: new ScriptedImageClient(),
+      media,
+    };
   };
 
   const run = async (name: string, input: unknown, ctx: ToolContext) => {

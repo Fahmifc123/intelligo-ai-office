@@ -35,7 +35,15 @@ export interface JsonRequest<T> {
   /** Strict validation applied to the reply (SPEC 14: every LLM JSON output is Zod-validated). */
   schema: z.ZodType<T>;
   maxTokens: number;
+  /** Images shown before the prompt (the review looks at carousel slides). */
+  images?: readonly LlmImage[];
   signal?: AbortSignal;
+}
+
+export interface LlmImage {
+  mediaType: 'image/jpeg' | 'image/png';
+  /** Base64 without the data: prefix. */
+  data: string;
 }
 
 export interface JsonResult<T> {

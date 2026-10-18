@@ -2,6 +2,7 @@ import type { ToolName } from '@intelligo/shared';
 import type { LlmTool } from '../llm/types';
 import { createGoogleDoc } from './create-google-doc';
 import { delegateTask } from './delegate-task';
+import { generateCarousel } from './generate-carousel';
 import { listTasks } from './list-tasks';
 import { proposeEmail } from './propose-email';
 import { proposeInvoice } from './propose-invoice';
@@ -34,6 +35,7 @@ const REGISTRY = new Map<ToolName, RegisteredTool>(
     register(scoreLeadsTool),
     register(runAnalysisTool),
     register(createGoogleDoc),
+    register(generateCarousel),
   ].map((tool) => [tool.name, tool]),
 );
 

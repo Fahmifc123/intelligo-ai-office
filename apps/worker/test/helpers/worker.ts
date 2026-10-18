@@ -2,7 +2,9 @@ import { WorkerEnv } from '@intelligo/shared/env';
 import { PgBoss } from 'pg-boss';
 import type { JobDeps } from '../../src/jobs/deps';
 import { createTestLogger } from '../../src/lib/log';
+import { ScriptedImageClient } from '../../src/llm/image';
 import type { LlmClient } from '../../src/llm/types';
+import { MemoryMediaStore } from '../../src/media/store';
 import { ensureQueues } from '../../src/queues';
 import { TEST_MODEL, TEST_ORG_ID, type TestDatabase } from './db';
 
@@ -37,6 +39,8 @@ export function jobDeps(
     db: t.db,
     boss,
     llm,
+    images: new ScriptedImageClient(),
+    media: new MemoryMediaStore(),
     env,
     log: createTestLogger(),
     prices: {},

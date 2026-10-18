@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { JsonResult, LlmMessage, LlmMessageParam } from './types';
+import type { JsonResult, LlmImage, LlmMessage, LlmMessageParam } from './types';
 
 /** Concatenated text of a response. */
 export function messageText(message: LlmMessage): string {
@@ -46,8 +46,23 @@ export async function jsonWithRetry<T>(
   schema: z.ZodType<T>,
   prompt: string,
   call: (messages: LlmMessageParam[]) => Promise<LlmMessage>,
+  images: readonly LlmImage[] = [],
 ): Promise<JsonResult<T>> {
-  const messages: LlmMessageParam[] = [{ role: 'user', content: prompt }];
+  const messages: LlmMessageParam[] = [
+    {
+      role: 'user',
+      content:
+        images.length === 0
+          ? prompt
+          : [
+              ...images.map((image) => ({
+                type: 'image' as const,
+                source: { type: 'base64' as const, media_type: image.mediaType, data: image.data },
+              })),
+              { type: 'text' as const, text: prompt },
+            ],
+    },
+  ];
   const responses: LlmMessage[] = [];
   let lastError = '';
   for (let attempt = 0; attempt < 2; attempt++) {

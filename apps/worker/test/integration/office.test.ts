@@ -25,9 +25,9 @@ describe.skipIf(!hasTestDatabase)('office modes and idle-tick (database)', () =>
     await t?.drop();
   });
 
-  it('seeds 12 agents working at their desks', async () => {
+  it('seeds 13 agents working at their desks', async () => {
     const states = await readAgentStates(t.db, TEST_ORG_ID);
-    expect(states).toHaveLength(12);
+    expect(states).toHaveLength(13);
     expect(new Set(states.map((s) => s.activity))).toEqual(new Set(['working']));
   });
 
@@ -38,7 +38,7 @@ describe.skipIf(!hasTestDatabase)('office modes and idle-tick (database)', () =>
       new Date(now.getTime() + 25_000),
     ]);
     const started = await applyOfficeMode(t.db, TEST_ORG_ID, sequenceRng([0]), 'normal', now);
-    expect(started.changed).toBe(12);
+    expect(started.changed).toBe(13);
     const meeting = await readAgentStates(t.db, TEST_ORG_ID);
     expect(meeting.every((s) => s.activity === 'meeting' && s.target_spot === 'meeting')).toBe(
       true,
@@ -48,7 +48,8 @@ describe.skipIf(!hasTestDatabase)('office modes and idle-tick (database)', () =>
       `select count(*)::int as count from public.task_events where org_id = $1 and type = 'note'`,
       [TEST_ORG_ID],
     );
-    expect(events.rows[0]?.count).toBe(13);
+    // One note per agent plus the meeting start.
+    expect(events.rows[0]?.count).toBe(14);
 
     const ended = await applyOfficeMode(
       t.db,
@@ -79,12 +80,12 @@ describe.skipIf(!hasTestDatabase)('office modes and idle-tick (database)', () =>
     );
     // Every roll 0.7: every free agent changes and heads to the pantry.
     const changed = await runIdleTick(t.db, TEST_ORG_ID, sequenceRng([0.1, 0.7, 0]));
-    expect(changed).toBe(11);
+    expect(changed).toBe(12);
     const states = await readAgentStates(t.db, TEST_ORG_ID);
     const writer = states.find((s) => s.agent_id === 'writer');
     expect(writer?.activity).toBe('working');
     expect(writer?.status_text).toBe('Mengerjakan: Caption');
-    expect(states.filter((s) => s.activity === 'break')).toHaveLength(11);
+    expect(states.filter((s) => s.activity === 'break')).toHaveLength(12);
   });
 
   it('dispatcher reacts to a settings NOTIFY by applying the break mode', async () => {
@@ -110,7 +111,7 @@ describe.skipIf(!hasTestDatabase)('office modes and idle-tick (database)', () =>
       ]);
       await waitFor(async () => {
         const states = await readAgentStates(t.db, TEST_ORG_ID);
-        return states.filter((s) => s.activity === 'break').length === 11;
+        return states.filter((s) => s.activity === 'break').length === 12;
       });
     } finally {
       await dispatcher.stop();

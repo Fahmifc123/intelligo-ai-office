@@ -16,6 +16,7 @@ import {
 } from '../agent/prompts';
 import { searchKnowledge } from '../knowledge/search';
 import type { Queryable } from '../lib/db';
+import type { LlmImage } from '../llm/types';
 import { recordUsage } from '../llm/usage';
 import type { TaskJob } from '../queues';
 import { readAgentState, setAgentState } from '../state/agent-state';
@@ -37,6 +38,36 @@ async function proposedActions(
     [taskId],
   );
   return result.rows.map((row) => ProposedAction.parse(row));
+}
+
+const SlideRow = z.object({
+  position: z.number().int(),
+  headline: z.string(),
+  body: z.string(),
+  url: z.string(),
+  content_type: z.enum(['image/jpeg', 'image/png']),
+});
+
+/** Slides of the task's latest carousel version, with image bytes for the reviewer. */
+async function latestSlides(
+  deps: JobDeps,
+  task: TaskRow,
+): Promise<{ slide: { position: number; headline: string; body: string }; image: LlmImage }[]> {
+  const result = await deps.db.query(
+    `select position, headline, body, url, content_type from public.media_assets
+      where task_id = $1 and version = $2 order by position`,
+    [task.id, task.revision_count],
+  );
+  const rows = result.rows.map((row) => SlideRow.parse(row));
+  return Promise.all(
+    rows.map(async (row) => ({
+      slide: { position: row.position, headline: row.headline, body: row.body },
+      image: {
+        mediaType: row.content_type,
+        data: (await deps.media.read(row.url)).toString('base64'),
+      },
+    })),
+  );
 }
 
 /** Besides the reviewed agent's desk (same offset as the client: seat + (0.75, 0.15)). */
@@ -141,6 +172,7 @@ export async function handleReviewTask(deps: JobDeps, job: TaskJob): Promise<voi
   }
 
   const actions = await proposedActions(db, task.id);
+  const slides = await latestSlides(deps, task);
   const knowledge = await searchKnowledge(
     db,
     task.org_id,
@@ -157,7 +189,9 @@ export async function handleReviewTask(deps: JobDeps, job: TaskJob): Promise<voi
         result: task.result_text ?? '(kosong)',
         proposedActions: actions,
         knowledge: knowledge.map((doc) => formatKnowledgeSnippet(doc)),
+        slides: slides.map((s) => s.slide),
       }),
+      images: slides.map((s) => s.image),
       jsonSchema: REVIEW_JSON_SCHEMA,
       schema: ReviewDecision,
       maxTokens: 1024,

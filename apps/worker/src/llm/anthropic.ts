@@ -64,17 +64,21 @@ export class AnthropicLlm implements LlmClient {
   }
 
   async json<T>(request: JsonRequest<T>): Promise<JsonResult<T>> {
-    return jsonWithRetry(request.schema, request.prompt, (messages) =>
-      this.client.beta.messages.create(
-        {
-          model: request.model,
-          max_tokens: request.maxTokens,
-          system: request.system,
-          messages,
-          output_config: { format: { type: 'json_schema', schema: request.jsonSchema } },
-        },
-        { signal: request.signal },
-      ),
+    return jsonWithRetry(
+      request.schema,
+      request.prompt,
+      (messages) =>
+        this.client.beta.messages.create(
+          {
+            model: request.model,
+            max_tokens: request.maxTokens,
+            system: request.system,
+            messages,
+            output_config: { format: { type: 'json_schema', schema: request.jsonSchema } },
+          },
+          { signal: request.signal },
+        ),
+      request.images,
     );
   }
 }

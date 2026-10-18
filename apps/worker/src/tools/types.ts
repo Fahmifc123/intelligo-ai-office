@@ -3,6 +3,8 @@ import type { WorkerEnv } from '@intelligo/shared/env';
 import type { z } from 'zod';
 import type { Db } from '../lib/db';
 import type { Logger } from '../lib/log';
+import type { ImageClient } from '../llm/image';
+import type { MediaStore } from '../media/store';
 
 export interface ToolContext {
   db: Db;
@@ -11,6 +13,8 @@ export interface ToolContext {
   orgId: string;
   task: TaskRow;
   agent: AgentRow;
+  images: ImageClient;
+  media: MediaStore;
 }
 
 export interface ToolOutput {

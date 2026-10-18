@@ -2,6 +2,7 @@ import {
   ACTION_KIND_LABELS,
   ActionRow,
   AUTO_APPROVABLE_KINDS,
+  INTERNAL_ACTION_KINDS,
   maskPii,
   N8N_WORKFLOWS,
   payloadDiff,
@@ -198,6 +199,10 @@ export async function handleExecuteAction(deps: JobDeps, job: ActionJob): Promis
   }
   await transitionTask(db, task.id, ['awaiting_approval'], 'executing');
 
+  if (action.kind === 'design_review' || INTERNAL_ACTION_KINDS.includes(action.kind)) {
+    await completeInternalAction(deps, action);
+    return;
+  }
   const workflow = N8N_WORKFLOWS[action.kind];
   const envelope = {
     action_id: action.id,
@@ -262,6 +267,22 @@ export async function handleExecuteAction(deps: JobDeps, job: ActionJob): Promis
       dry_run: dryRun,
       ...(error ? { error } : {}),
     },
+  });
+  await resolveTaskActions(deps, action.task_id);
+}
+
+/** Internal kinds (design_review): the approval itself is the outcome; nothing leaves the app. */
+async function completeInternalAction(deps: JobDeps, action: ActionRow): Promise<void> {
+  await deps.db.query(
+    `update public.actions set status = 'executed', executed_at = now(), response = $2::jsonb where id = $1`,
+    [action.id, JSON.stringify({ internal: true })],
+  );
+  await logEvent(deps.db, {
+    orgId: action.org_id,
+    taskId: action.task_id,
+    agentId: action.agent_id,
+    type: 'executed',
+    payload: { action_id: action.id, kind: action.kind, internal: true },
   });
   await resolveTaskActions(deps, action.task_id);
 }

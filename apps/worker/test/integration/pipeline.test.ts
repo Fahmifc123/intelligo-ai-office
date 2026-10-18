@@ -3,6 +3,7 @@ import { startWorker, type RunningWorker } from '../../src/app';
 import { createHealthState } from '../../src/lib/health';
 import { createTestLogger } from '../../src/lib/log';
 import { ScriptedLlm } from '../../src/llm/scripted';
+import { MemoryMediaStore } from '../../src/media/store';
 import { loadTask } from '../../src/state/tasks';
 import { createTestDatabase, sequenceRng, TEST_ORG_ID, type TestDatabase } from '../helpers/db';
 import { hasTestDatabase } from '../helpers/env';
@@ -26,6 +27,7 @@ describe.skipIf(!hasTestDatabase)('full pipeline (pg-boss + dispatcher + scripte
   let maxConcurrentWalks = 0;
 
   let n8n: MockN8nServer;
+  const media = new MemoryMediaStore();
 
   beforeAll(async () => {
     n8n = await startMockN8nServer('rahasia-pipeline');
@@ -43,6 +45,7 @@ describe.skipIf(!hasTestDatabase)('full pipeline (pg-boss + dispatcher + scripte
       log: createTestLogger(),
       rng: sequenceRng([0.9]),
       llm: new ScriptedLlm({ turnDelayMs: 20, chunkDelayMs: 5 }),
+      media,
       health: createHealthState(),
       sleep: async () => {
         activeWalks += 1;
@@ -145,5 +148,65 @@ describe.skipIf(!hasTestDatabase)('full pipeline (pg-boss + dispatcher + scripte
       [id],
     );
     expect(waits.rows[0]?.n).toBe(2);
+  }, 90_000);
+
+  it('Fase 9: carousel goes Laras > Dimas > Rani, slides wait for human review, nothing is posted', async () => {
+    const before = n8n.calls.length;
+    const id = await insert('Buat carousel Instagram promo Bootcamp Batch 21', null);
+
+    const designerTask = async () =>
+      (
+        await t.db.query<{ id: string; status: string }>(
+          `select id::text, status from public.tasks where parent_task_id = $1 and assignee_id = 'designer'`,
+          [id],
+        )
+      ).rows[0];
+    await waitFor(async () => (await designerTask())?.status === 'awaiting_approval', 60_000);
+    const design = await designerTask();
+    if (!design) throw new Error('subtugas desainer tidak ada');
+
+    const parent = await loadTask(t.db, id);
+    expect(parent?.assignee_id).toBe('manager');
+    const order = await t.db.query<{ assignee_id: string }>(
+      `select assignee_id from public.tasks where parent_task_id = $1 order by created_at`,
+      [id],
+    );
+    expect(order.rows.map((r) => r.assignee_id)).toEqual(['socmed', 'writer', 'designer']);
+
+    const slides = await t.db.query<{ position: number; headline: string; url: string }>(
+      `select position, headline, url from public.media_assets where task_id = $1 order by position`,
+      [design.id],
+    );
+    expect(slides.rows.map((r) => r.headline)).toEqual([
+      'Pindah Karier ke Data',
+      'Belajar dari Praktisi',
+      'Mulai 3 November 2026',
+    ]);
+    expect(slides.rows.every((r) => media.files.has(r.url))).toBe(true);
+
+    const actions = await t.db.query<{
+      id: string;
+      kind: string;
+      payload: { slides: unknown[]; caption: string };
+    }>(`select id::text, kind, payload from public.actions where task_id = $1`, [design.id]);
+    expect(actions.rows).toHaveLength(1);
+    const [action] = actions.rows;
+    expect(action?.kind).toBe('design_review');
+    expect(action?.payload.slides).toHaveLength(3);
+    expect(action?.payload.caption).toContain('Rp 7.500.000');
+    const images = await t.db.query<{ n: number }>(
+      `select count(*)::int as n from public.llm_usage where task_id = $1 and purpose = 'image'`,
+      [design.id],
+    );
+    expect(images.rows[0]?.n).toBe(3);
+
+    // The human reviewer approves: recorded only, nothing leaves the app.
+    await t.db.query(
+      `update public.actions set status = 'approved', approved_at = now() where id = $1`,
+      [action?.id],
+    );
+    await waitFor(async () => (await loadTask(t.db, id))?.status === 'done', 60_000);
+    expect((await loadTask(t.db, design.id))?.status).toBe('done');
+    expect(n8n.calls.slice(before)).toEqual([]);
   }, 90_000);
 });
