@@ -120,7 +120,7 @@ test('Rapat tim memindahkan agen bebas ke ruang rapat lalu kembali setelah 25 de
           )
         ).rows[0].n,
     )
-    .toBe(12);
+    .toBe(13);
   await expect(page.getByTestId('status-writer')).not.toHaveText('Rapat mingguan', {
     timeout: 40_000,
   });
@@ -154,7 +154,7 @@ test('Jam istirahat bisa dinyalakan dan dimatikan, Viewer tidak bisa menekannya'
           )
         ).rows[0].n,
     )
-    .toBe(12);
+    .toBe(13);
   await owner.getByRole('button', { name: 'Jam istirahat' }).click();
   await expect
     .poll(
